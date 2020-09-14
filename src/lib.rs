@@ -3,7 +3,7 @@
 
 #[derive(Debug, PartialEq)]
 pub enum Error {
-    OutputBufferFull,
+    OutputBufferTooSmall,
     ZeroInEncodedData,
     TruncatedEncodedData,
 }
@@ -11,8 +11,8 @@ impl std::error::Error for Error {}
 impl std::fmt::Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match *self {
-            Error::OutputBufferFull => {
-                write!(f, "Output buffer is full")
+            Error::OutputBufferTooSmall => {
+                write!(f, "Output buffer is too small")
             }
             Error::ZeroInEncodedData => {
                 write!(f, "Zero found in encoded input data")
@@ -34,7 +34,7 @@ pub mod cobs {
         for x in in_buf {
             if *x == 0 {
                 if code_i >= out_buf.len() {
-                    return Err(crate::Error::OutputBufferFull);
+                    return Err(crate::Error::OutputBufferTooSmall);
                 }
                 out_buf[code_i] = (out_i - code_i) as u8;
                 code_i = out_i;
@@ -42,13 +42,13 @@ pub mod cobs {
             }
             else {
                 if out_i >= out_buf.len() {
-                    return Err(crate::Error::OutputBufferFull);
+                    return Err(crate::Error::OutputBufferTooSmall);
                 }
                 out_buf[out_i] = *x;
                 out_i += 1;
                 if out_i - code_i >= 0xFE {
                     if code_i >= out_buf.len() {
-                        return Err(crate::Error::OutputBufferFull);
+                        return Err(crate::Error::OutputBufferTooSmall);
                     }
                     out_buf[code_i] = 0xFF;
                     code_i = out_i;
@@ -61,7 +61,7 @@ pub mod cobs {
         // Finalise the remaining output. In particular, write the code (length) byte.
         // Update the pointer to calculate the final output length.
         if code_i >= out_buf.len() {
-            return Err(crate::Error::OutputBufferFull);
+            return Err(crate::Error::OutputBufferTooSmall);
         }
         out_buf[code_i] = (out_i - code_i) as u8;
 
@@ -87,7 +87,7 @@ pub mod cobs {
                         return Err(crate::Error::ZeroInEncodedData);
                     }
                     if out_i >= out_buf.len() {
-                        return Err(crate::Error::OutputBufferFull);
+                        return Err(crate::Error::OutputBufferTooSmall);
                     }
                     out_buf[out_i] = in_byte;
                     out_i += 1;
@@ -100,7 +100,7 @@ pub mod cobs {
                 if code < 0xFF {
                     // Output trailing zero.
                     if out_i >= out_buf.len() {
-                        return Err(crate::Error::OutputBufferFull);
+                        return Err(crate::Error::OutputBufferTooSmall);
                     }
                     out_buf[out_i] = 0;
                     out_i += 1;
@@ -120,7 +120,7 @@ pub mod cobsr {
         for x in in_buf {
             if *x == 0 {
                 if code_i >= out_buf.len() {
-                    return Err(crate::Error::OutputBufferFull);
+                    return Err(crate::Error::OutputBufferTooSmall);
                 }
                 out_buf[code_i] = (out_i - code_i) as u8;
                 code_i = out_i;
@@ -130,13 +130,13 @@ pub mod cobsr {
             else {
                 last_value = *x;
                 if out_i >= out_buf.len() {
-                    return Err(crate::Error::OutputBufferFull);
+                    return Err(crate::Error::OutputBufferTooSmall);
                 }
                 out_buf[out_i] = last_value;
                 out_i += 1;
                 if out_i - code_i >= 0xFE {
                     if code_i >= out_buf.len() {
-                        return Err(crate::Error::OutputBufferFull);
+                        return Err(crate::Error::OutputBufferTooSmall);
                     }
                     out_buf[code_i] = 0xFF;
                     code_i = out_i;
@@ -149,7 +149,7 @@ pub mod cobsr {
         // Finalise the remaining output. In particular, write the code (length) byte.
         // Update the pointer to calculate the final output length.
         if code_i >= out_buf.len() {
-            return Err(crate::Error::OutputBufferFull);
+            return Err(crate::Error::OutputBufferTooSmall);
         }
         if last_value >= (out_i - code_i) as u8 {
             out_buf[code_i] = last_value;
@@ -177,7 +177,7 @@ pub mod cobsr {
                         // End of data, where length code is greater than remaining data.
                         // Output the length code as the last output byte.
                         if out_i >= out_buf.len() {
-                            return Err(crate::Error::OutputBufferFull);
+                            return Err(crate::Error::OutputBufferTooSmall);
                         }
                         out_buf[out_i] = code;
                         out_i += 1;
@@ -188,7 +188,7 @@ pub mod cobsr {
                         return Err(crate::Error::ZeroInEncodedData);
                     }
                     if out_i >= out_buf.len() {
-                        return Err(crate::Error::OutputBufferFull);
+                        return Err(crate::Error::OutputBufferTooSmall);
                     }
                     out_buf[out_i] = in_byte;
                     out_i += 1;
@@ -201,7 +201,7 @@ pub mod cobsr {
                 if code < 0xFF {
                     // Output trailing zero.
                     if out_i >= out_buf.len() {
-                        return Err(crate::Error::OutputBufferFull);
+                        return Err(crate::Error::OutputBufferTooSmall);
                     }
                     out_buf[out_i] = 0;
                     out_i += 1;
