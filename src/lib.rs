@@ -43,11 +43,11 @@ pub mod cobs {
         let mut code_i = 0;
         let mut out_i = 1;
 
+        if code_i >= out_buf.len() {
+            return Err(crate::Error::OutputBufferTooSmall);
+        }
         for x in in_buf {
             if *x == 0 {
-                if code_i >= out_buf.len() {
-                    return Err(crate::Error::OutputBufferTooSmall);
-                }
                 out_buf[code_i] = (out_i - code_i) as u8;
                 code_i = out_i;
                 out_i = code_i + 1;
@@ -59,11 +59,11 @@ pub mod cobs {
                 out_buf[out_i] = *x;
                 out_i += 1;
                 if out_i - code_i >= 0xFE {
+                    out_buf[code_i] = 0xFF;
+                    code_i = out_i;
                     if code_i >= out_buf.len() {
                         return Err(crate::Error::OutputBufferTooSmall);
                     }
-                    out_buf[code_i] = 0xFF;
-                    code_i = out_i;
                     out_i = code_i + 1;
                 }
             }
@@ -72,9 +72,6 @@ pub mod cobs {
         // We've reached the end of the source data.
         // Finalise the remaining output. In particular, write the code (length) byte.
         // Update the pointer to calculate the final output length.
-        if code_i >= out_buf.len() {
-            return Err(crate::Error::OutputBufferTooSmall);
-        }
         out_buf[code_i] = (out_i - code_i) as u8;
 
         Ok(&out_buf[..out_i])
@@ -137,11 +134,11 @@ pub mod cobsr {
         let mut out_i = 1;
         let mut last_value = 0u8;
 
+        if code_i >= out_buf.len() {
+            return Err(crate::Error::OutputBufferTooSmall);
+        }
         for x in in_buf {
             if *x == 0 {
-                if code_i >= out_buf.len() {
-                    return Err(crate::Error::OutputBufferTooSmall);
-                }
                 out_buf[code_i] = (out_i - code_i) as u8;
                 code_i = out_i;
                 out_i = code_i + 1;
@@ -155,11 +152,11 @@ pub mod cobsr {
                 out_buf[out_i] = last_value;
                 out_i += 1;
                 if out_i - code_i >= 0xFE {
+                    out_buf[code_i] = 0xFF;
+                    code_i = out_i;
                     if code_i >= out_buf.len() {
                         return Err(crate::Error::OutputBufferTooSmall);
                     }
-                    out_buf[code_i] = 0xFF;
-                    code_i = out_i;
                     out_i = code_i + 1;
                 }
             }
@@ -168,9 +165,6 @@ pub mod cobsr {
         // We've reached the end of the source data.
         // Finalise the remaining output. In particular, write the code (length) byte.
         // Update the pointer to calculate the final output length.
-        if code_i >= out_buf.len() {
-            return Err(crate::Error::OutputBufferTooSmall);
-        }
         if last_value >= (out_i - code_i) as u8 {
             out_buf[code_i] = last_value;
             out_i -= 1;
@@ -193,12 +187,12 @@ pub mod cobsr {
                     return Err(crate::Error::ZeroInEncodedData);
                 }
                 for in_i in (code_i + 1)..(code_i + code as usize) {
+                    if out_i >= out_buf.len() {
+                        return Err(crate::Error::OutputBufferTooSmall);
+                    }
                     if in_i >= in_buf.len() {
                         // End of data, where length code is greater than remaining data.
                         // Output the length code as the last output byte.
-                        if out_i >= out_buf.len() {
-                            return Err(crate::Error::OutputBufferTooSmall);
-                        }
                         out_buf[out_i] = code;
                         out_i += 1;
                         break;
@@ -206,9 +200,6 @@ pub mod cobsr {
                     let in_byte = in_buf[in_i];
                     if in_byte == 0 {
                         return Err(crate::Error::ZeroInEncodedData);
-                    }
-                    if out_i >= out_buf.len() {
-                        return Err(crate::Error::OutputBufferTooSmall);
                     }
                     out_buf[out_i] = in_byte;
                     out_i += 1;
