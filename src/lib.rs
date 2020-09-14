@@ -27,6 +27,18 @@ impl std::fmt::Display for Error {
 pub type Result<T> = std::result::Result<T, crate::Error>;
 
 pub mod cobs {
+    pub const fn encode_max_output_size(input_len: usize) -> usize {
+        input_len + ((input_len + 253) / 254)
+    }
+
+    pub const fn decode_max_output_size(input_len: usize) -> usize {
+        if input_len > 0 {
+            input_len - 1
+        } else {
+            0
+        }
+    }
+
     pub fn encode<'a>(out_buf: &'a mut [u8], in_buf: &[u8]) -> crate::Result<&'a[u8]> {
         let mut code_i = 0;
         let mut out_i = 1;
@@ -112,6 +124,14 @@ pub mod cobs {
 }
 
 pub mod cobsr {
+    pub const fn encode_max_output_size(input_len: usize) -> usize {
+        input_len + ((input_len + 253) / 254)
+    }
+
+    pub const fn decode_max_output_size(input_len: usize) -> usize {
+        input_len
+    }
+
     pub fn encode<'a>(out_buf: &'a mut [u8], in_buf: &[u8]) -> crate::Result<&'a[u8]> {
         let mut code_i = 0;
         let mut out_i = 1;
