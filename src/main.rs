@@ -18,13 +18,11 @@ fn main() -> Result<(), Box<dyn Error>> {
     {
         let bad_cobs_encoded_data = b"\x00sAAA";
         let result = cobs::cobs::decode(&mut cobs_decode_buf, bad_cobs_encoded_data);
-        assert!(result.is_err());
-        assert_eq!(result.err(), Some(cobs::Error::ZeroInEncodedData));
+        assert_eq!(result, Err(cobs::Error::ZeroInEncodedData));
 
         let bad_cobs_encoded_data = b"\x05AAA";
         let result = cobs::cobs::decode(&mut cobs_decode_buf, bad_cobs_encoded_data);
-        assert!(result.is_err());
-        assert_eq!(result.err(), Some(cobs::Error::TruncatedEncodedData));
+        assert_eq!(result, Err(cobs::Error::TruncatedEncodedData));
     }
 
     // Now COBSR/R.
