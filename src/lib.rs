@@ -39,7 +39,7 @@ pub mod cobs {
         }
     }
 
-    pub fn encode<'a>(out_buf: &'a mut [u8], in_buf: &[u8]) -> crate::Result<&'a[u8]> {
+    pub fn encode_array<'a>(out_buf: &'a mut [u8], in_buf: &[u8]) -> crate::Result<&'a[u8]> {
         let mut code_i = 0;
         let mut out_i = 1;
 
@@ -77,7 +77,7 @@ pub mod cobs {
         Ok(&out_buf[..out_i])
     }
 
-    pub fn decode<'a>(out_buf: &'a mut [u8], in_buf: &[u8]) -> crate::Result<&'a[u8]> {
+    pub fn decode_array<'a>(out_buf: &'a mut [u8], in_buf: &[u8]) -> crate::Result<&'a[u8]> {
         let mut code_i = 0;
         let mut out_i = 0;
 
@@ -129,7 +129,7 @@ pub mod cobsr {
         input_len
     }
 
-    pub fn encode<'a>(out_buf: &'a mut [u8], in_buf: &[u8]) -> crate::Result<&'a[u8]> {
+    pub fn encode_array<'a>(out_buf: &'a mut [u8], in_buf: &[u8]) -> crate::Result<&'a[u8]> {
         let mut code_i = 0;
         let mut out_i = 1;
         let mut last_value = 0u8;
@@ -176,7 +176,7 @@ pub mod cobsr {
         Ok(&out_buf[..out_i])
     }
 
-    pub fn decode<'a>(out_buf: &'a mut [u8], in_buf: &[u8]) -> crate::Result<&'a[u8]> {
+    pub fn decode_array<'a>(out_buf: &'a mut [u8], in_buf: &[u8]) -> crate::Result<&'a[u8]> {
         let mut code_i = 0;
         let mut out_i = 0;
 
