@@ -77,6 +77,49 @@ pub mod cobs {
         Ok(&out_buf[..out_i])
     }
 
+    pub fn encode_vector(in_buf: &[u8]) -> crate::Result<std::vec::Vec<u8>> {
+        let mut code_i = 0;
+        let mut run_len = 0_u8;
+        let mut out_vec = std::vec::Vec::<u8>::with_capacity(encode_max_output_size(in_buf.len()));
+
+        for x in in_buf {
+            if *x == 0 {
+                if run_len == 0 {
+                    out_vec.push(1);
+                }
+                else {
+                    out_vec[code_i] = run_len;
+                }
+                code_i = out_vec.len();
+                run_len = 0;
+            }
+            else {
+                if run_len == 0 {
+                    out_vec.push(0xFF);
+                    run_len = 1;
+                }
+                out_vec.push(*x);
+                run_len += 1;
+                if run_len >= 0xFF {
+                    out_vec[code_i] = 0xFF;
+                    code_i = out_vec.len();
+                    run_len = 0;
+                }
+            }
+        }
+
+        // We've reached the end of the source data.
+        // Finalise the remaining output. In particular, write the code (length) byte.
+        if run_len == 0 {
+            out_vec.push(1);
+        }
+        else {
+            out_vec[code_i] = run_len;
+        }
+
+        Ok(out_vec)
+    }
+
     pub fn decode_array<'a>(out_buf: &'a mut [u8], in_buf: &[u8]) -> crate::Result<&'a[u8]> {
         let mut code_i = 0;
         let mut out_i = 0;
@@ -132,7 +175,7 @@ pub mod cobsr {
     pub fn encode_array<'a>(out_buf: &'a mut [u8], in_buf: &[u8]) -> crate::Result<&'a[u8]> {
         let mut code_i = 0;
         let mut out_i = 1;
-        let mut last_value = 0u8;
+        let mut last_value = 0_u8;
 
         if code_i >= out_buf.len() {
             return Err(crate::Error::OutputBufferTooSmall);
@@ -142,7 +185,7 @@ pub mod cobsr {
                 out_buf[code_i] = (out_i - code_i) as u8;
                 code_i = out_i;
                 out_i = code_i + 1;
-                last_value = 0u8;
+                last_value = 0;
             }
             else {
                 last_value = *x;
@@ -174,6 +217,58 @@ pub mod cobsr {
         }
 
         Ok(&out_buf[..out_i])
+    }
+
+    pub fn encode_vector(in_buf: &[u8]) -> crate::Result<std::vec::Vec<u8>> {
+        let mut code_i = 0;
+        let mut run_len = 0_u8;
+        let mut last_value = 0_u8;
+        let mut out_vec = std::vec::Vec::<u8>::with_capacity(encode_max_output_size(in_buf.len()));
+
+        for x in in_buf {
+            if *x == 0 {
+                if run_len == 0 {
+                    out_vec.push(1);
+                }
+                else {
+                    out_vec[code_i] = run_len;
+                }
+                code_i = out_vec.len();
+                run_len = 0;
+                last_value = 0;
+            }
+            else {
+                if run_len == 0 {
+                    out_vec.push(0xFF);
+                    run_len = 1;
+                }
+                last_value = *x;
+                out_vec.push(last_value);
+                run_len += 1;
+                if run_len >= 0xFF {
+                    out_vec[code_i] = 0xFF;
+                    code_i = out_vec.len();
+                    run_len = 0;
+                }
+            }
+        }
+
+        // We've reached the end of the source data.
+        // Finalise the remaining output. In particular, write the code (length) byte.
+        if run_len == 0 {
+            out_vec.push(1);
+        }
+        else {
+            if last_value >= run_len {
+                out_vec[code_i] = last_value;
+                out_vec.pop();
+            }
+            else {
+                out_vec[code_i] = run_len;
+            }
+        }
+
+        Ok(out_vec)
     }
 
     pub fn decode_array<'a>(out_buf: &'a mut [u8], in_buf: &[u8]) -> crate::Result<&'a[u8]> {
