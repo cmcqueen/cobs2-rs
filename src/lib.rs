@@ -161,6 +161,40 @@ pub mod cobs {
         }
         Ok(&out_buf[..out_i])
     }
+
+    pub fn decode_vector(in_buf: &[u8]) -> crate::Result<std::vec::Vec<u8>> {
+        let mut code_i = 0;
+        let mut out_vec = std::vec::Vec::<u8>::with_capacity(decode_max_output_size(in_buf.len()));
+
+        if in_buf.len() != 0 {
+            loop {
+                let code = in_buf[code_i];
+                if code == 0 {
+                    return Err(crate::Error::ZeroInEncodedData);
+                }
+                for in_i in (code_i + 1)..(code_i + code as usize) {
+                    if in_i >= in_buf.len() {
+                        return Err(crate::Error::TruncatedEncodedData);
+                    }
+                    let in_byte = in_buf[in_i];
+                    if in_byte == 0 {
+                        return Err(crate::Error::ZeroInEncodedData);
+                    }
+                    out_vec.push(in_byte);
+                }
+                code_i += code as usize;
+                if code_i >= in_buf.len() {
+                    // End of data. Exit, without outputting a trailing zero for the end of the data.
+                    break;
+                }
+                if code < 0xFF {
+                    // Output trailing zero.
+                    out_vec.push(0);
+                }
+            }
+        }
+        Ok(out_vec)
+    }
 }
 
 pub mod cobsr {
@@ -315,5 +349,42 @@ pub mod cobsr {
             }
         }
         Ok(&out_buf[..out_i])
+    }
+
+    pub fn decode_vector(in_buf: &[u8]) -> crate::Result<std::vec::Vec<u8>> {
+        let mut code_i = 0;
+        let mut out_vec = std::vec::Vec::<u8>::with_capacity(decode_max_output_size(in_buf.len()));
+
+        if in_buf.len() != 0 {
+            loop {
+                let code = in_buf[code_i];
+                if code == 0 {
+                    return Err(crate::Error::ZeroInEncodedData);
+                }
+                for in_i in (code_i + 1)..(code_i + code as usize) {
+                    if in_i >= in_buf.len() {
+                        // End of data, where length code is greater than remaining data.
+                        // Output the length code as the last output byte.
+                        out_vec.push(code);
+                        break;
+                    }
+                    let in_byte = in_buf[in_i];
+                    if in_byte == 0 {
+                        return Err(crate::Error::ZeroInEncodedData);
+                    }
+                    out_vec.push(in_byte);
+                }
+                code_i += code as usize;
+                if code_i >= in_buf.len() {
+                    // End of data. Exit, without outputting a trailing zero for the end of the data.
+                    break;
+                }
+                if code < 0xFF {
+                    // Output trailing zero.
+                    out_vec.push(0);
+                }
+            }
+        }
+        Ok(out_vec)
     }
 }

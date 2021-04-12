@@ -21,8 +21,8 @@ fn main() -> Result<(), Box<dyn Error>> {
     {
         let data_cobs = cobs::cobs::encode_vector(data)?;
         println!("COBS encode_vector: {:X?}", data_cobs);
-        let data_cobs_decoded = cobs::cobs::decode_array(&mut cobs_decode_buf, &data_cobs)?;
-        println!("COBS decode_array: {:X?}", data_cobs_decoded);
+        let data_cobs_decoded = cobs::cobs::decode_vector(&data_cobs)?;
+        println!("COBS decode_vector: {:X?}", data_cobs_decoded);
     }
 
     // Deliberately try decoding bad data.
@@ -49,8 +49,8 @@ fn main() -> Result<(), Box<dyn Error>> {
         let data_cobs = cobs::cobsr::encode_vector(data)?;
         println!("COBS/R encode_vector: {:X?}", data_cobs);
 
-        let data_cobs_decoded = cobs::cobsr::decode_array(&mut cobs_decode_buf, &data_cobs)?;
-        println!("COBS/R decode_array: {:X?}", data_cobs_decoded);
+        let data_cobs_decoded = cobs::cobsr::decode_vector(&data_cobs)?;
+        println!("COBS/R decode_vector: {:X?}", data_cobs_decoded);
     }
 
     Ok(())
