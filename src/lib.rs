@@ -161,6 +161,48 @@ pub mod cobs {
         }
         Ok(&out_buf[..out_i])
     }
+
+    pub fn decode_in_place<'a>(in_out_buf: &'a mut [u8]) -> crate::Result<&'a[u8]> {
+        let mut code_i = 0;
+        let mut out_i = 0;
+
+        if in_out_buf.len() != 0 {
+            loop {
+                let code = in_out_buf[code_i];
+                if code == 0 {
+                    return Err(crate::Error::ZeroInEncodedData);
+                }
+                for in_i in (code_i + 1)..(code_i + code as usize) {
+                    if in_i >= in_out_buf.len() {
+                        return Err(crate::Error::TruncatedEncodedData);
+                    }
+                    let in_byte = in_out_buf[in_i];
+                    if in_byte == 0 {
+                        return Err(crate::Error::ZeroInEncodedData);
+                    }
+                    if out_i >= in_out_buf.len() {
+                        return Err(crate::Error::OutputBufferTooSmall);
+                    }
+                    in_out_buf[out_i] = in_byte;
+                    out_i += 1;
+                }
+                code_i += code as usize;
+                if code_i >= in_out_buf.len() {
+                    // End of data. Exit, without outputting a trailing zero for the end of the data.
+                    break;
+                }
+                if code < 0xFF {
+                    // Output trailing zero.
+                    if out_i >= in_out_buf.len() {
+                        return Err(crate::Error::OutputBufferTooSmall);
+                    }
+                    in_out_buf[out_i] = 0;
+                    out_i += 1;
+                }
+            }
+        }
+        Ok(&in_out_buf[..out_i])
+    }
 }
 
 pub mod cobsr {
