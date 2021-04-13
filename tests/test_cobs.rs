@@ -1,4 +1,4 @@
-use ::cobs::cobs;
+use ::cobs::{cobs, cobsr};
 
 struct DataEncodedMapping<'a> {
     pub data: &'a [u8],
@@ -24,7 +24,12 @@ fn test_cobs_vector_predefined() {
         assert!(enc_result.is_ok());
         assert_eq!(&enc_result.clone().unwrap(), mapping.encoded);
 
-        let dec_result = cobs::decode_vector(&enc_result.unwrap());
+        let dec_result = cobs::decode_vector(&enc_result.clone().unwrap());
+        assert!(dec_result.is_ok());
+        assert_eq!(dec_result.unwrap(), mapping.data);
+
+        // COBS/R decode function should also be able to decode COBS-encoded data.
+        let dec_result = cobsr::decode_vector(&enc_result.unwrap());
         assert!(dec_result.is_ok());
         assert_eq!(dec_result.unwrap(), mapping.data);
     }
