@@ -1,3 +1,4 @@
+use ::cobs::cobsr;
 
 struct DataEncodedMapping<'a> {
     pub data: &'a [u8],
@@ -30,11 +31,11 @@ const PREDEFINED_ENCODINGS: [DataEncodedMapping; 20] = [
 #[test]
 fn test_cobsr_vector_predefined() {
     for mapping in PREDEFINED_ENCODINGS.iter() {
-        let enc_result = cobs::cobsr::encode_vector(mapping.data);
+        let enc_result = cobsr::encode_vector(mapping.data);
         assert!(enc_result.is_ok());
         assert_eq!(&enc_result.clone().unwrap(), mapping.encoded);
 
-        let dec_result = cobs::cobsr::decode_vector(&enc_result.unwrap());
+        let dec_result = cobsr::decode_vector(&enc_result.unwrap());
         assert!(dec_result.is_ok());
         assert_eq!(dec_result.unwrap(), mapping.data);
     }
