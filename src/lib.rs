@@ -28,14 +28,18 @@ pub type Result<T> = std::result::Result<T, crate::Error>;
 
 pub mod cobs {
     pub const fn encode_max_output_size(input_len: usize) -> usize {
-        input_len + ((input_len + 253) / 254)
+        if input_len > 0 {
+            input_len + ((input_len + 253) / 254)
+        } else {
+            1
+        }
     }
 
     pub const fn decode_max_output_size(input_len: usize) -> usize {
-        if input_len > 0 {
+        if input_len > 1 {
             input_len - 1
         } else {
-            0
+            1
         }
     }
 
@@ -202,11 +206,20 @@ pub mod cobs {
 
 pub mod cobsr {
     pub const fn encode_max_output_size(input_len: usize) -> usize {
-        input_len + ((input_len + 253) / 254)
+        if input_len > 0 {
+            input_len + ((input_len + 253) / 254)
+        } else {
+            1
+        }
     }
 
     pub const fn decode_max_output_size(input_len: usize) -> usize {
-        input_len
+        if input_len > 0 {
+            input_len
+        }
+        else {
+            1
+        }
     }
 
     pub fn encode_array<'a>(out_buf: &'a mut [u8], in_buf: &[u8]) -> crate::Result<&'a[u8]> {
