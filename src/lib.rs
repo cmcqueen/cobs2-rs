@@ -81,8 +81,10 @@ pub mod cobs {
         let mut code_i = 0;
         let mut run_len = 0_u8;
         let mut out_vec = std::vec::Vec::<u8>::with_capacity(encode_max_output_size(in_buf.len()));
+        let mut last_ff_run = false;
 
         for x in in_buf {
+            last_ff_run = false;
             if *x == 0 {
                 if run_len == 0 {
                     out_vec.push(1);
@@ -104,6 +106,7 @@ pub mod cobs {
                     out_vec[code_i] = 0xFF;
                     code_i = out_vec.len();
                     run_len = 0;
+                    last_ff_run = true;
                 }
             }
         }
@@ -111,7 +114,9 @@ pub mod cobs {
         // We've reached the end of the source data.
         // Finalise the remaining output. In particular, write the code (length) byte.
         if run_len == 0 {
-            out_vec.push(1);
+            if !last_ff_run {
+                out_vec.push(1);
+            }
         }
         else {
             out_vec[code_i] = run_len;
@@ -258,8 +263,10 @@ pub mod cobsr {
         let mut run_len = 0_u8;
         let mut last_value = 0_u8;
         let mut out_vec = std::vec::Vec::<u8>::with_capacity(encode_max_output_size(in_buf.len()));
+        let mut last_ff_run = false;
 
         for x in in_buf {
+            last_ff_run = false;
             if *x == 0 {
                 if run_len == 0 {
                     out_vec.push(1);
@@ -283,6 +290,7 @@ pub mod cobsr {
                     out_vec[code_i] = 0xFF;
                     code_i = out_vec.len();
                     run_len = 0;
+                    last_ff_run = true;
                 }
             }
         }
@@ -290,7 +298,9 @@ pub mod cobsr {
         // We've reached the end of the source data.
         // Finalise the remaining output. In particular, write the code (length) byte.
         if run_len == 0 {
-            out_vec.push(1);
+            if !last_ff_run {
+                out_vec.push(1);
+            }
         }
         else {
             if last_value >= run_len {
