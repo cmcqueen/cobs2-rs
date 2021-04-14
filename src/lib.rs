@@ -51,6 +51,14 @@ pub mod cobs {
             return Err(crate::Error::OutputBufferTooSmall);
         }
         for x in in_buf {
+            if out_i - code_i >= 0xFF {
+                out_buf[code_i] = 0xFF;
+                code_i = out_i;
+                if code_i >= out_buf.len() {
+                    return Err(crate::Error::OutputBufferTooSmall);
+                }
+                out_i = code_i + 1;
+            }
             if *x == 0 {
                 out_buf[code_i] = (out_i - code_i) as u8;
                 code_i = out_i;
@@ -65,14 +73,6 @@ pub mod cobs {
                 }
                 out_buf[out_i] = *x;
                 out_i += 1;
-                if out_i - code_i >= 0xFF {
-                    out_buf[code_i] = 0xFF;
-                    code_i = out_i;
-                    if code_i >= out_buf.len() {
-                        return Err(crate::Error::OutputBufferTooSmall);
-                    }
-                    out_i = code_i + 1;
-                }
             }
         }
 
