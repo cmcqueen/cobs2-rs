@@ -61,7 +61,7 @@ pub mod cobs {
                 }
                 out_buf[out_i] = *x;
                 out_i += 1;
-                if out_i - code_i >= 0xFE {
+                if out_i - code_i >= 0xFF {
                     out_buf[code_i] = 0xFF;
                     code_i = out_i;
                     if code_i >= out_buf.len() {
@@ -239,7 +239,7 @@ pub mod cobsr {
                 }
                 out_buf[out_i] = last_value;
                 out_i += 1;
-                if out_i - code_i >= 0xFE {
+                if out_i - code_i >= 0xFF {
                     out_buf[code_i] = 0xFF;
                     code_i = out_i;
                     if code_i >= out_buf.len() {
