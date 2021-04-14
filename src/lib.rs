@@ -50,6 +50,9 @@ pub mod cobs {
             if *x == 0 {
                 out_buf[code_i] = (out_i - code_i) as u8;
                 code_i = out_i;
+                if code_i >= out_buf.len() {
+                    return Err(crate::Error::OutputBufferTooSmall);
+                }
                 out_i = code_i + 1;
             }
             else {
@@ -223,6 +226,9 @@ pub mod cobsr {
             if *x == 0 {
                 out_buf[code_i] = (out_i - code_i) as u8;
                 code_i = out_i;
+                if code_i >= out_buf.len() {
+                    return Err(crate::Error::OutputBufferTooSmall);
+                }
                 out_i = code_i + 1;
                 last_value = 0;
             }
