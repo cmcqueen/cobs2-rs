@@ -5,7 +5,7 @@ struct DataEncodedMapping<'a> {
     pub encoded: &'a [u8],
 }
 
-const PREDEFINED_ENCODINGS: [DataEncodedMapping; 25] = [
+const PREDEFINED_ENCODINGS: [DataEncodedMapping; 28] = [
     DataEncodedMapping{ rawdata: b"",                                   encoded: b"\x01"                            },
     DataEncodedMapping{ rawdata: b"\x01",                               encoded: b"\x02\x01"                        },
     DataEncodedMapping{ rawdata: b"\x02",                               encoded: b"\x02"                            },
@@ -16,7 +16,9 @@ const PREDEFINED_ENCODINGS: [DataEncodedMapping; 25] = [
     DataEncodedMapping{ rawdata: b"\xD5",                               encoded: b"\xD5"                            },
     DataEncodedMapping{ rawdata: b"\xFE",                               encoded: b"\xFE"                            },
     DataEncodedMapping{ rawdata: b"\xFF",                               encoded: b"\xFF"                            },
-    DataEncodedMapping{ rawdata: b"1",                                  encoded: b"1"                               },
+    DataEncodedMapping{ rawdata: b"a\x02",                              encoded: b"\x03a\x02"                       },
+    DataEncodedMapping{ rawdata: b"a\x03",                              encoded: b"\x03a"                           },
+    DataEncodedMapping{ rawdata: b"a\xFF",                              encoded: b"\xFFa"                           },
     DataEncodedMapping{ rawdata: b"\x05\x04\x03\x02\x01",               encoded: b"\x06\x05\x04\x03\x02\x01"        },
     DataEncodedMapping{ rawdata: b"12345",                              encoded: b"51234"                           },
     DataEncodedMapping{ rawdata: b"12345\x00\x04\x03\x02\x01",          encoded: b"\x0612345\x05\x04\x03\x02\x01"   },
@@ -27,23 +29,32 @@ const PREDEFINED_ENCODINGS: [DataEncodedMapping; 25] = [
     DataEncodedMapping{ rawdata: b"\x00\x00",                           encoded: b"\x01\x01\x01"                    },
     DataEncodedMapping{ rawdata: b"\x00\x00\x00",                       encoded: b"\x01\x01\x01\x01"                },
     DataEncodedMapping {
+        // 253 non-zero bytes
         rawdata: b"0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst123",
         encoded: b"\xFE0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst123",
     },
     DataEncodedMapping {
+        // 254 non-zero bytes
         rawdata: b"0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst1234",
         encoded: b"\xFF0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst1234",
     },
     DataEncodedMapping {
+        // 255 non-zero bytes
         rawdata: b"0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst12345",
         encoded: b"\xFF0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst12345",
     },
     DataEncodedMapping {
+        // zero followed by 255 non-zero bytes
         rawdata: b"\x000123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst12345",
         encoded: b"\x01\xFF0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst12345",
     },
-    // Currently fails
     DataEncodedMapping {
+        // 254 non-zero bytes, ending with a final FE
+        rawdata: b"0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst123\xFE",
+        encoded: b"\xFF0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst123\xFE",
+    },
+    DataEncodedMapping {
+        // 254 non-zero bytes, ending with a final FF
         rawdata: b"0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst123\xFF",
         encoded: b"\xFF0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst123",
     },
