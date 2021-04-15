@@ -6,28 +6,28 @@ struct DataEncodedMapping<'a> {
 }
 
 const PREDEFINED_ENCODINGS: [DataEncodedMapping; 31] = [
-    DataEncodedMapping{ rawdata: b"",                                   encoded: b"\x01"                            },
-    DataEncodedMapping{ rawdata: b"\x01",                               encoded: b"\x02\x01"                        },
-    DataEncodedMapping{ rawdata: b"\x02",                               encoded: b"\x02"                            },
-    DataEncodedMapping{ rawdata: b"\x03",                               encoded: b"\x03"                            },
-    DataEncodedMapping{ rawdata: b"\x7E",                               encoded: b"\x7E"                            },
-    DataEncodedMapping{ rawdata: b"\x7F",                               encoded: b"\x7F"                            },
-    DataEncodedMapping{ rawdata: b"\x80",                               encoded: b"\x80"                            },
-    DataEncodedMapping{ rawdata: b"\xD5",                               encoded: b"\xD5"                            },
-    DataEncodedMapping{ rawdata: b"\xFE",                               encoded: b"\xFE"                            },
-    DataEncodedMapping{ rawdata: b"\xFF",                               encoded: b"\xFF"                            },
-    DataEncodedMapping{ rawdata: b"a\x02",                              encoded: b"\x03a\x02"                       },
-    DataEncodedMapping{ rawdata: b"a\x03",                              encoded: b"\x03a"                           },
-    DataEncodedMapping{ rawdata: b"a\xFF",                              encoded: b"\xFFa"                           },
-    DataEncodedMapping{ rawdata: b"\x05\x04\x03\x02\x01",               encoded: b"\x06\x05\x04\x03\x02\x01"        },
-    DataEncodedMapping{ rawdata: b"12345",                              encoded: b"51234"                           },
-    DataEncodedMapping{ rawdata: b"12345\x00\x04\x03\x02\x01",          encoded: b"\x0612345\x05\x04\x03\x02\x01"   },
-    DataEncodedMapping{ rawdata: b"12345\x006789",                      encoded: b"\x06123459678"                   },
-    DataEncodedMapping{ rawdata: b"\x0012345\x006789",                  encoded: b"\x01\x06123459678"               },
-    DataEncodedMapping{ rawdata: b"12345\x006789\x00",                  encoded: b"\x0612345\x056789\x01"           },
-    DataEncodedMapping{ rawdata: b"\x00",                               encoded: b"\x01\x01"                        },
-    DataEncodedMapping{ rawdata: b"\x00\x00",                           encoded: b"\x01\x01\x01"                    },
-    DataEncodedMapping{ rawdata: b"\x00\x00\x00",                       encoded: b"\x01\x01\x01\x01"                },
+    DataEncodedMapping { rawdata: b"",                                  encoded: b"\x01"                            },
+    DataEncodedMapping { rawdata: b"\x01",                              encoded: b"\x02\x01"                        },
+    DataEncodedMapping { rawdata: b"\x02",                              encoded: b"\x02"                            },
+    DataEncodedMapping { rawdata: b"\x03",                              encoded: b"\x03"                            },
+    DataEncodedMapping { rawdata: b"\x7E",                              encoded: b"\x7E"                            },
+    DataEncodedMapping { rawdata: b"\x7F",                              encoded: b"\x7F"                            },
+    DataEncodedMapping { rawdata: b"\x80",                              encoded: b"\x80"                            },
+    DataEncodedMapping { rawdata: b"\xD5",                              encoded: b"\xD5"                            },
+    DataEncodedMapping { rawdata: b"\xFE",                              encoded: b"\xFE"                            },
+    DataEncodedMapping { rawdata: b"\xFF",                              encoded: b"\xFF"                            },
+    DataEncodedMapping { rawdata: b"a\x02",                             encoded: b"\x03a\x02"                       },
+    DataEncodedMapping { rawdata: b"a\x03",                             encoded: b"\x03a"                           },
+    DataEncodedMapping { rawdata: b"a\xFF",                             encoded: b"\xFFa"                           },
+    DataEncodedMapping { rawdata: b"\x05\x04\x03\x02\x01",              encoded: b"\x06\x05\x04\x03\x02\x01"        },
+    DataEncodedMapping { rawdata: b"12345",                             encoded: b"51234"                           },
+    DataEncodedMapping { rawdata: b"12345\x00\x04\x03\x02\x01",         encoded: b"\x0612345\x05\x04\x03\x02\x01"   },
+    DataEncodedMapping { rawdata: b"12345\x006789",                     encoded: b"\x06123459678"                   },
+    DataEncodedMapping { rawdata: b"\x0012345\x006789",                 encoded: b"\x01\x06123459678"               },
+    DataEncodedMapping { rawdata: b"12345\x006789\x00",                 encoded: b"\x0612345\x056789\x01"           },
+    DataEncodedMapping { rawdata: b"\x00",                              encoded: b"\x01\x01"                        },
+    DataEncodedMapping { rawdata: b"\x00\x00",                          encoded: b"\x01\x01\x01"                    },
+    DataEncodedMapping { rawdata: b"\x00\x00\x00",                      encoded: b"\x01\x01\x01\x01"                },
     DataEncodedMapping {
         // 253 non-zero bytes
         rawdata: b"0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst123",
@@ -85,13 +85,13 @@ const PREDEFINED_DECODINGS: [DataEncodedMapping; 3] = [
     DataEncodedMapping {
         // 254 non-zero bytes
         rawdata: b"0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst1234",
-        // A naive encoder might not handle this edge case optimally, and append a redundant trailing \x01.
+        // A naive encoder implementation might not handle this edge case optimally, and append a redundant trailing \x01.
         encoded: b"\xFF0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst1234\x01",
     },
     DataEncodedMapping {
         // 254 non-zero bytes, ending with a final FF
         rawdata: b"0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst123\xFF",
-        // A naive COBS/R encoder might not handle this edge case optimally, and output a trailing \xFF.
+        // A naive COBS/R encoder implementation might not handle this edge case optimally, and output a trailing \xFF.
         encoded: b"\xFF0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst123\xFF",
     },
 ];
