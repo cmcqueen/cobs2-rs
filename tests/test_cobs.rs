@@ -105,6 +105,78 @@ fn test_cobs_decode_array_predefined() {
 }
 
 #[test]
+fn test_cobs_encode_array_buffer_too_small() {
+    {
+        let in_data = b"\x01\x01\x01\x01\x01";
+        let mut cobs_encode_buf = [ 0xCC_u8; 5 ];
+        let result = cobs::encode_array(&mut cobs_encode_buf, in_data);
+        assert_eq!(result, Err(::cobs::Error::OutputBufferTooSmall));
+    }
+
+    {
+        let in_data = b"\x01\x01\x01\x01\x01";
+        let mut cobs_encode_buf = [ 0xCC_u8; 6 ];
+        let result = cobs::encode_array(&mut cobs_encode_buf, in_data);
+        assert_ne!(result, Err(::cobs::Error::OutputBufferTooSmall));
+    }
+
+    {
+        let in_data = b"\x00\x00\x00\x00\x00";
+        let mut cobs_encode_buf = [ 0xCC_u8; 5 ];
+        let result = cobs::encode_array(&mut cobs_encode_buf, in_data);
+        assert_eq!(result, Err(::cobs::Error::OutputBufferTooSmall));
+    }
+
+    {
+        let in_data = b"\x00\x00\x00\x00\x00";
+        let mut cobs_encode_buf = [ 0xCC_u8; 6 ];
+        let result = cobs::encode_array(&mut cobs_encode_buf, in_data);
+        assert_ne!(result, Err(::cobs::Error::OutputBufferTooSmall));
+    }
+}
+
+#[test]
+fn test_cobs_decode_array_buffer_too_small() {
+    {
+        let cobs_encoded_data = b"\x05AAAA";
+        let mut cobs_decode_buf = [ 0xCC_u8; 3 ];
+        let result = cobs::decode_array(&mut cobs_decode_buf, cobs_encoded_data);
+        assert_eq!(result, Err(::cobs::Error::OutputBufferTooSmall));
+    }
+
+    {
+        let cobs_encoded_data = b"\x05AAAA";
+        let mut cobs_decode_buf = [ 0xCC_u8; 5 ];
+        let result = cobs::decode_array(&mut cobs_decode_buf, cobs_encoded_data);
+        assert_ne!(result, Err(::cobs::Error::OutputBufferTooSmall));
+    }
+}
+
+#[test]
+fn test_cobs_decode_array_bad() {
+    // Try decoding bad data.
+    let mut cobs_decode_buf = [ 0xCC_u8; 50 ];
+
+    {
+        let bad_cobs_encoded_data = b"\x00sAAA";
+        let result = cobs::decode_array(&mut cobs_decode_buf, bad_cobs_encoded_data);
+        assert_eq!(result, Err(::cobs::Error::ZeroInEncodedData));
+    }
+
+    {
+        let bad_cobs_encoded_data = b"\x05AAA";
+        let result = cobs::decode_array(&mut cobs_decode_buf, bad_cobs_encoded_data);
+        assert_eq!(result, Err(::cobs::Error::TruncatedEncodedData));
+    }
+
+    {
+        let bad_cobs_encoded_data = b"\x05\x00AAA";
+        let result = cobs::decode_array(&mut cobs_decode_buf, bad_cobs_encoded_data);
+        assert_eq!(result, Err(::cobs::Error::ZeroInEncodedData));
+    }
+}
+
+#[test]
 fn test_cobs_vector_predefined() {
     for mapping in PREDEFINED_ENCODINGS.iter() {
         let enc_result = cobs::encode_vector(mapping.rawdata);
