@@ -1,10 +1,20 @@
 
 #![allow(dead_code)]
 
+/// Errors that can occur during COBS encoding/decoding.
 #[derive(Debug, PartialEq, Clone)]
 pub enum Error {
+    /// For functions that generate output in an array, such as [cobs::encode_array()], it
+    /// indicates that the output array size is too small for the output data.
     OutputBufferTooSmall,
+    /// For decoding functions, it indicates that an unexpected zero-byte was found in the
+    /// input data. Valid COBS-encoded data should not contain any zero-bytes.
+    /// This error is only applicable for decoding.
     ZeroInEncodedData,
+    /// For COBS decoding functions, it indicates that the COBS-encoded data was not valid;
+    /// the data appears to be truncated. Or it may be invalid due to data corruption.
+    /// More data was expected given the last length-byte value in the data.
+    /// This error is only applicable for COBS decoding (not COBS/R).
     TruncatedEncodedData,
 }
 impl std::error::Error for Error {}
@@ -24,9 +34,13 @@ impl std::fmt::Display for Error {
     }
 }
 
+/// The return type for encoding and decoding functions, based on [std::result::Result],
+/// in which the error type is [Error].
 pub type Result<T> = std::result::Result<T, crate::Error>;
 
+/// This module contains functions for standard COBS encoding and decoding.
 pub mod cobs {
+    /// Calculate the maximum possible COBS encoded output size, for a given size of input data.
     pub const fn encode_max_output_size(input_len: usize) -> usize {
         if input_len > 0 {
             input_len + ((input_len + 253) / 254)
@@ -35,6 +49,7 @@ pub mod cobs {
         }
     }
 
+    /// Calculate the maximum possible decoded output size, for a given size of COBS-encoded input.
     pub const fn decode_max_output_size(input_len: usize) -> usize {
         if input_len > 1 {
             input_len - 1
@@ -43,6 +58,16 @@ pub mod cobs {
         }
     }
 
+    /// Encode data into COBS encoded form, writing output to the given output buffer.
+    ///
+    /// The output data is COBS-encoded, containing no zero-bytes.
+    ///
+    /// The caller must provide a reference to a suitably-sized output buffer.
+    /// [encode_max_output_size()] calculates the required output buffer size, for a given input
+    /// size.
+    ///
+    /// The return value is a [Result] that in the `Ok` case is a slice of the valid data in the
+    /// output buffer.
     pub fn encode_array<'a>(out_buf: &'a mut [u8], in_buf: &[u8]) -> crate::Result<&'a[u8]> {
         let mut code_i = 0;
         let mut out_i = 1;
@@ -84,6 +109,11 @@ pub mod cobs {
         Ok(&out_buf[..out_i])
     }
 
+    /// Encode data into COBS encoded form, returning output as a vector of [u8].
+    ///
+    /// The output data is COBS-encoded, containing no zero-bytes.
+    ///
+    /// The return value is a [Result] that in the `Ok` case is a vector of [u8].
     pub fn encode_vector(in_buf: &[u8]) -> crate::Result<std::vec::Vec<u8>> {
         let mut code_i = 0;
         let mut run_len = 0_u8;
@@ -127,6 +157,14 @@ pub mod cobs {
         Ok(out_vec)
     }
 
+    /// Decode COBS-encoded data, writing decoded data to the given output buffer.
+    ///
+    /// The caller must provide a reference to a suitably-sized output buffer.
+    /// [decode_max_output_size()] calculates the required output buffer size, for a given input
+    /// size.
+    ///
+    /// The return value is a [Result] that in the `Ok` case is a slice of the decoded data in the
+    /// output buffer.
     pub fn decode_array<'a>(out_buf: &'a mut [u8], in_buf: &[u8]) -> crate::Result<&'a[u8]> {
         let mut code_i = 0;
         let mut out_i = 0;
@@ -169,6 +207,9 @@ pub mod cobs {
         Ok(&out_buf[..out_i])
     }
 
+    /// Decode COBS-encoded data, returning output as a vector of [u8].
+    ///
+    /// The return value is a [Result] that in the `Ok` case is a vector of [u8].
     pub fn decode_vector(in_buf: &[u8]) -> crate::Result<std::vec::Vec<u8>> {
         let mut code_i = 0;
         let mut out_vec = std::vec::Vec::<u8>::with_capacity(decode_max_output_size(in_buf.len()));
@@ -204,7 +245,9 @@ pub mod cobs {
     }
 }
 
+/// This module contains functions for a variant of COBS, called COBS/R.
 pub mod cobsr {
+    /// Calculate the maximum possible COBS/R encoded output size, for a given size of input data.
     pub const fn encode_max_output_size(input_len: usize) -> usize {
         if input_len > 0 {
             input_len + ((input_len + 253) / 254)
@@ -213,6 +256,7 @@ pub mod cobsr {
         }
     }
 
+    /// Calculate the maximum possible decoded output size, for a given size of COBS/R-encoded input.
     pub const fn decode_max_output_size(input_len: usize) -> usize {
         if input_len > 0 {
             input_len
@@ -222,6 +266,16 @@ pub mod cobsr {
         }
     }
 
+    /// Encode data into COBS/R encoded form, writing output to the given output buffer.
+    ///
+    /// The output data is COBS-encoded, containing no zero-bytes.
+    ///
+    /// The caller must provide a reference to a suitably-sized output buffer.
+    /// [encode_max_output_size()] calculates the required output buffer size, for a given input
+    /// size.
+    ///
+    /// The return value is a [Result] that in the `Ok` case is a slice of the valid data in the
+    /// output buffer.
     pub fn encode_array<'a>(out_buf: &'a mut [u8], in_buf: &[u8]) -> crate::Result<&'a[u8]> {
         let mut code_i = 0;
         let mut out_i = 1;
@@ -272,6 +326,11 @@ pub mod cobsr {
         Ok(&out_buf[..out_i])
     }
 
+    /// Encode data into COBS/R encoded form, returning output as a vector of [u8].
+    ///
+    /// The output data is COBS/R-encoded, containing no zero-bytes.
+    ///
+    /// The return value is a [Result] that in the `Ok` case is a vector of [u8].
     pub fn encode_vector(in_buf: &[u8]) -> crate::Result<std::vec::Vec<u8>> {
         let mut code_i = 0;
         let mut run_len = 0_u8;
@@ -324,6 +383,14 @@ pub mod cobsr {
         Ok(out_vec)
     }
 
+    /// Decode COBS/R-encoded data, writing decoded data to the given output buffer.
+    ///
+    /// The caller must provide a reference to a suitably-sized output buffer.
+    /// [decode_max_output_size()] calculates the required output buffer size, for a given input
+    /// size.
+    ///
+    /// The return value is a [Result] that in the `Ok` case is a slice of the decoded data in the
+    /// output buffer.
     pub fn decode_array<'a>(out_buf: &'a mut [u8], in_buf: &[u8]) -> crate::Result<&'a[u8]> {
         let mut code_i = 0;
         let mut out_i = 0;
@@ -370,6 +437,9 @@ pub mod cobsr {
         Ok(&out_buf[..out_i])
     }
 
+    /// Decode COBS/R-encoded data, returning output as a vector of [u8].
+    ///
+    /// The return value is a [Result] that in the `Ok` case is a vector of [u8].
     pub fn decode_vector(in_buf: &[u8]) -> crate::Result<std::vec::Vec<u8>> {
         let mut code_i = 0;
         let mut out_vec = std::vec::Vec::<u8>::with_capacity(decode_max_output_size(in_buf.len()));
