@@ -1,8 +1,11 @@
+/*!
+ * Encoding and decoding of COBS (Consistent Overhead Byte Stuffing)
+ */
 
 #![allow(dead_code)]
 
 /// Errors that can occur during COBS encoding/decoding.
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub enum Error {
     /// For functions that generate output in an array, such as [cobs::encode_array()], it
     /// indicates that the output array size is too small for the output data.
@@ -17,6 +20,7 @@ pub enum Error {
     /// This error is only applicable for COBS decoding (not COBS/R).
     TruncatedEncodedData,
 }
+
 impl std::error::Error for Error {}
 impl std::fmt::Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
@@ -68,7 +72,7 @@ pub mod cobs {
     ///
     /// The return value is a [Result] that in the `Ok` case is a slice of the valid data in the
     /// output buffer.
-    pub fn encode_array<'a>(out_buf: &'a mut [u8], in_buf: &[u8]) -> crate::Result<&'a[u8]> {
+    pub fn encode_array<'a>(out_buf: &'a mut [u8], in_buf: &[u8]) -> crate::Result<&'a [u8]> {
         let mut code_i = 0;
         let mut out_i = 1;
 
@@ -91,8 +95,7 @@ pub mod cobs {
                     return Err(crate::Error::OutputBufferTooSmall);
                 }
                 out_i = code_i + 1;
-            }
-            else {
+            } else {
                 if out_i >= out_buf.len() {
                     return Err(crate::Error::OutputBufferTooSmall);
                 }
@@ -120,7 +123,7 @@ pub mod cobs {
         let mut out_vec = std::vec::Vec::<u8>::with_capacity(encode_max_output_size(in_buf.len()));
 
         for x in in_buf {
-            if run_len >= 0xFF {
+            if run_len == 0xFF {
                 out_vec[code_i] = 0xFF;
                 code_i = out_vec.len();
                 run_len = 0;
@@ -128,14 +131,12 @@ pub mod cobs {
             if *x == 0 {
                 if run_len == 0 {
                     out_vec.push(1);
-                }
-                else {
+                } else {
                     out_vec[code_i] = run_len;
                 }
                 code_i = out_vec.len();
                 run_len = 0;
-            }
-            else {
+            } else {
                 if run_len == 0 {
                     out_vec.push(0xFF);
                     run_len = 1;
@@ -149,8 +150,7 @@ pub mod cobs {
         // Finalise the remaining output. In particular, write the code (length) byte.
         if run_len == 0 {
             out_vec.push(1);
-        }
-        else {
+        } else {
             out_vec[code_i] = run_len;
         }
 
@@ -165,11 +165,11 @@ pub mod cobs {
     ///
     /// The return value is a [Result] that in the `Ok` case is a slice of the decoded data in the
     /// output buffer.
-    pub fn decode_array<'a>(out_buf: &'a mut [u8], in_buf: &[u8]) -> crate::Result<&'a[u8]> {
+    pub fn decode_array<'a>(out_buf: &'a mut [u8], in_buf: &[u8]) -> crate::Result<&'a [u8]> {
         let mut code_i = 0;
         let mut out_i = 0;
 
-        if in_buf.len() != 0 {
+        if !in_buf.is_empty() {
             loop {
                 let code = in_buf[code_i];
                 if code == 0 {
@@ -214,7 +214,7 @@ pub mod cobs {
         let mut code_i = 0;
         let mut out_vec = std::vec::Vec::<u8>::with_capacity(decode_max_output_size(in_buf.len()));
 
-        if in_buf.len() != 0 {
+        if !in_buf.is_empty() {
             loop {
                 let code = in_buf[code_i];
                 if code == 0 {
@@ -260,8 +260,7 @@ pub mod cobsr {
     pub const fn decode_max_output_size(input_len: usize) -> usize {
         if input_len > 0 {
             input_len
-        }
-        else {
+        } else {
             1
         }
     }
@@ -276,7 +275,7 @@ pub mod cobsr {
     ///
     /// The return value is a [Result] that in the `Ok` case is a slice of the valid data in the
     /// output buffer.
-    pub fn encode_array<'a>(out_buf: &'a mut [u8], in_buf: &[u8]) -> crate::Result<&'a[u8]> {
+    pub fn encode_array<'a>(out_buf: &'a mut [u8], in_buf: &[u8]) -> crate::Result<&'a [u8]> {
         let mut code_i = 0;
         let mut out_i = 1;
         let mut last_value = 0_u8;
@@ -301,8 +300,7 @@ pub mod cobsr {
                 }
                 out_i = code_i + 1;
                 last_value = 0;
-            }
-            else {
+            } else {
                 last_value = *x;
                 if out_i >= out_buf.len() {
                     return Err(crate::Error::OutputBufferTooSmall);
@@ -318,8 +316,7 @@ pub mod cobsr {
         if last_value >= (out_i - code_i) as u8 {
             out_buf[code_i] = last_value;
             out_i -= 1;
-        }
-        else {
+        } else {
             out_buf[code_i] = (out_i - code_i) as u8;
         }
 
@@ -338,7 +335,7 @@ pub mod cobsr {
         let mut out_vec = std::vec::Vec::<u8>::with_capacity(encode_max_output_size(in_buf.len()));
 
         for x in in_buf {
-            if run_len >= 0xFF {
+            if run_len == 0xFF {
                 out_vec[code_i] = 0xFF;
                 code_i = out_vec.len();
                 run_len = 0;
@@ -346,15 +343,13 @@ pub mod cobsr {
             if *x == 0 {
                 if run_len == 0 {
                     out_vec.push(1);
-                }
-                else {
+                } else {
                     out_vec[code_i] = run_len;
                 }
                 code_i = out_vec.len();
                 run_len = 0;
                 last_value = 0;
-            }
-            else {
+            } else {
                 if run_len == 0 {
                     out_vec.push(0xFF);
                     run_len = 1;
@@ -369,15 +364,11 @@ pub mod cobsr {
         // Finalise the remaining output. In particular, write the code (length) byte.
         if run_len == 0 {
             out_vec.push(1);
-        }
-        else {
-            if last_value >= run_len {
-                out_vec[code_i] = last_value;
-                out_vec.pop();
-            }
-            else {
-                out_vec[code_i] = run_len;
-            }
+        } else if last_value >= run_len {
+            out_vec[code_i] = last_value;
+            out_vec.pop();
+        } else {
+            out_vec[code_i] = run_len;
         }
 
         Ok(out_vec)
@@ -391,11 +382,11 @@ pub mod cobsr {
     ///
     /// The return value is a [Result] that in the `Ok` case is a slice of the decoded data in the
     /// output buffer.
-    pub fn decode_array<'a>(out_buf: &'a mut [u8], in_buf: &[u8]) -> crate::Result<&'a[u8]> {
+    pub fn decode_array<'a>(out_buf: &'a mut [u8], in_buf: &[u8]) -> crate::Result<&'a [u8]> {
         let mut code_i = 0;
         let mut out_i = 0;
 
-        if in_buf.len() != 0 {
+        if !in_buf.is_empty() {
             loop {
                 let code = in_buf[code_i];
                 if code == 0 {
@@ -444,7 +435,7 @@ pub mod cobsr {
         let mut code_i = 0;
         let mut out_vec = std::vec::Vec::<u8>::with_capacity(decode_max_output_size(in_buf.len()));
 
-        if in_buf.len() != 0 {
+        if !in_buf.is_empty() {
             loop {
                 let code = in_buf[code_i];
                 if code == 0 {

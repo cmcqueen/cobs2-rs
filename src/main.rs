@@ -38,7 +38,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     // Now COBSR/R.
     {
-        println!("");
+        println!();
         let data_cobs = cobs::cobsr::encode_array(&mut cobs_buf, data)?;
         println!("COBS/R encode_array: {:X?}", data_cobs);
 
