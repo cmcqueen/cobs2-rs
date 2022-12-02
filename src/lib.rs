@@ -3,6 +3,7 @@
  */
 
 #![allow(dead_code)]
+#![forbid(unsafe_code)]
 
 /// Errors that can occur during COBS encoding/decoding.
 #[derive(Debug, PartialEq, Eq, Clone)]
