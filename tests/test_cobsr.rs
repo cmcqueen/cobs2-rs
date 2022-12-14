@@ -187,6 +187,7 @@ fn test_cobsr_decode_array_bad() {
     }
 }
 
+#[cfg(feature = "alloc")]
 #[test]
 fn test_cobsr_vector_predefined() {
     for mapping in PREDEFINED_ENCODINGS.iter() {
@@ -200,6 +201,7 @@ fn test_cobsr_vector_predefined() {
     }
 }
 
+#[cfg(feature = "alloc")]
 #[test]
 fn test_cobsr_decode_vector_predefined() {
     for mapping in PREDEFINED_DECODINGS.iter() {

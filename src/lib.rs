@@ -5,6 +5,13 @@
 #![allow(dead_code)]
 #![forbid(unsafe_code)]
 
+#![cfg_attr(not(feature = "std"), no_std)]
+
+use core::fmt;
+
+#[cfg(feature = "alloc")]
+extern crate alloc;
+
 /// Errors that can occur during COBS encoding/decoding.
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub enum Error {
@@ -22,9 +29,13 @@ pub enum Error {
     TruncatedEncodedData,
 }
 
+/// Apply trait [std::error::Error].
+#[cfg(feature = "std")]
 impl std::error::Error for Error {}
-impl std::fmt::Display for Error {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+
+/// Implement trait [fmt::Display].
+impl fmt::Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
             Error::OutputBufferTooSmall => {
                 write!(f, "Output buffer is too small")
@@ -39,9 +50,9 @@ impl std::fmt::Display for Error {
     }
 }
 
-/// The return type for encoding and decoding functions, based on [std::result::Result],
+/// The return type for encoding and decoding functions, based on [core::result::Result],
 /// in which the error type is [Error].
-pub type Result<T> = std::result::Result<T, crate::Error>;
+pub type Result<T> = core::result::Result<T, crate::Error>;
 
 /// This module contains functions for standard COBS encoding and decoding.
 pub mod cobs {
@@ -118,10 +129,11 @@ pub mod cobs {
     /// The output data is COBS-encoded, containing no zero-bytes.
     ///
     /// The return value is a [Result] that in the `Ok` case is a vector of [u8].
-    pub fn encode_vector(in_buf: &[u8]) -> crate::Result<std::vec::Vec<u8>> {
+    #[cfg(feature = "alloc")]
+    pub fn encode_vector(in_buf: &[u8]) -> crate::Result<alloc::vec::Vec<u8>> {
         let mut code_i = 0;
         let mut run_len = 0_u8;
-        let mut out_vec = std::vec::Vec::<u8>::with_capacity(encode_max_output_size(in_buf.len()));
+        let mut out_vec = alloc::vec::Vec::<u8>::with_capacity(encode_max_output_size(in_buf.len()));
 
         for x in in_buf {
             if run_len == 0xFF {
@@ -211,9 +223,10 @@ pub mod cobs {
     /// Decode COBS-encoded data, returning output as a vector of [u8].
     ///
     /// The return value is a [Result] that in the `Ok` case is a vector of [u8].
-    pub fn decode_vector(in_buf: &[u8]) -> crate::Result<std::vec::Vec<u8>> {
+    #[cfg(feature = "alloc")]
+    pub fn decode_vector(in_buf: &[u8]) -> crate::Result<alloc::vec::Vec<u8>> {
         let mut code_i = 0;
-        let mut out_vec = std::vec::Vec::<u8>::with_capacity(decode_max_output_size(in_buf.len()));
+        let mut out_vec = alloc::vec::Vec::<u8>::with_capacity(decode_max_output_size(in_buf.len()));
 
         if !in_buf.is_empty() {
             loop {
@@ -329,11 +342,12 @@ pub mod cobsr {
     /// The output data is COBS/R-encoded, containing no zero-bytes.
     ///
     /// The return value is a [Result] that in the `Ok` case is a vector of [u8].
-    pub fn encode_vector(in_buf: &[u8]) -> crate::Result<std::vec::Vec<u8>> {
+    #[cfg(feature = "alloc")]
+    pub fn encode_vector(in_buf: &[u8]) -> crate::Result<alloc::vec::Vec<u8>> {
         let mut code_i = 0;
         let mut run_len = 0_u8;
         let mut last_value = 0_u8;
-        let mut out_vec = std::vec::Vec::<u8>::with_capacity(encode_max_output_size(in_buf.len()));
+        let mut out_vec = alloc::vec::Vec::<u8>::with_capacity(encode_max_output_size(in_buf.len()));
 
         for x in in_buf {
             if run_len == 0xFF {
@@ -432,9 +446,10 @@ pub mod cobsr {
     /// Decode COBS/R-encoded data, returning output as a vector of [u8].
     ///
     /// The return value is a [Result] that in the `Ok` case is a vector of [u8].
-    pub fn decode_vector(in_buf: &[u8]) -> crate::Result<std::vec::Vec<u8>> {
+    #[cfg(feature = "alloc")]
+    pub fn decode_vector(in_buf: &[u8]) -> crate::Result<alloc::vec::Vec<u8>> {
         let mut code_i = 0;
-        let mut out_vec = std::vec::Vec::<u8>::with_capacity(decode_max_output_size(in_buf.len()));
+        let mut out_vec = alloc::vec::Vec::<u8>::with_capacity(decode_max_output_size(in_buf.len()));
 
         if !in_buf.is_empty() {
             loop {
