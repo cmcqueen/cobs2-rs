@@ -75,13 +75,15 @@ fn test_cobs_array_predefined() {
         assert!(enc_result.is_ok());
         assert_eq!(enc_result.clone().unwrap(), mapping.encoded);
 
-        let mut decode_out_vec = vec![0_u8; cobs::decode_max_output_size(enc_result.clone().unwrap().len())];
+        let mut decode_out_vec =
+            vec![0_u8; cobs::decode_max_output_size(enc_result.clone().unwrap().len())];
         let dec_result = cobs::decode_array(&mut decode_out_vec[..], &enc_result.clone().unwrap());
         assert!(dec_result.is_ok());
         assert_eq!(dec_result.unwrap(), mapping.rawdata);
 
         // COBS/R decode function should also be able to decode COBS-encoded rawdata.
-        let mut decode_out_vec = vec![0_u8; cobsr::decode_max_output_size(enc_result.clone().unwrap().len())];
+        let mut decode_out_vec =
+            vec![0_u8; cobsr::decode_max_output_size(enc_result.clone().unwrap().len())];
         let dec_result = cobsr::decode_array(&mut decode_out_vec[..], &enc_result.unwrap());
         assert!(dec_result.is_ok());
         assert_eq!(dec_result.unwrap(), mapping.rawdata);
@@ -92,7 +94,7 @@ fn test_cobs_array_predefined() {
 fn test_cobs_decode_array_predefined() {
     for mapping in PREDEFINED_DECODINGS.iter() {
         let mut decode_out_vec = vec![0_u8; cobs::decode_max_output_size(mapping.encoded.len())];
-        let dec_result = cobs::decode_array(&mut decode_out_vec[..],mapping.encoded);
+        let dec_result = cobs::decode_array(&mut decode_out_vec[..], mapping.encoded);
         assert!(dec_result.is_ok());
         assert_eq!(dec_result.unwrap(), mapping.rawdata);
 
@@ -108,28 +110,28 @@ fn test_cobs_decode_array_predefined() {
 fn test_cobs_encode_array_buffer_too_small() {
     {
         let in_data = b"\x01\x01\x01\x01\x01";
-        let mut cobs_encode_buf = [ 0xCC_u8; 5 ];
+        let mut cobs_encode_buf = [0xCC_u8; 5];
         let result = cobs::encode_array(&mut cobs_encode_buf, in_data);
         assert_eq!(result, Err(::cobs::Error::OutputBufferTooSmall));
     }
 
     {
         let in_data = b"\x01\x01\x01\x01\x01";
-        let mut cobs_encode_buf = [ 0xCC_u8; 6 ];
+        let mut cobs_encode_buf = [0xCC_u8; 6];
         let result = cobs::encode_array(&mut cobs_encode_buf, in_data);
         assert_ne!(result, Err(::cobs::Error::OutputBufferTooSmall));
     }
 
     {
         let in_data = b"\x00\x00\x00\x00\x00";
-        let mut cobs_encode_buf = [ 0xCC_u8; 5 ];
+        let mut cobs_encode_buf = [0xCC_u8; 5];
         let result = cobs::encode_array(&mut cobs_encode_buf, in_data);
         assert_eq!(result, Err(::cobs::Error::OutputBufferTooSmall));
     }
 
     {
         let in_data = b"\x00\x00\x00\x00\x00";
-        let mut cobs_encode_buf = [ 0xCC_u8; 6 ];
+        let mut cobs_encode_buf = [0xCC_u8; 6];
         let result = cobs::encode_array(&mut cobs_encode_buf, in_data);
         assert_ne!(result, Err(::cobs::Error::OutputBufferTooSmall));
     }
@@ -139,14 +141,14 @@ fn test_cobs_encode_array_buffer_too_small() {
 fn test_cobs_decode_array_buffer_too_small() {
     {
         let cobs_encoded_data = b"\x05AAAA";
-        let mut cobs_decode_buf = [ 0xCC_u8; 3 ];
+        let mut cobs_decode_buf = [0xCC_u8; 3];
         let result = cobs::decode_array(&mut cobs_decode_buf, cobs_encoded_data);
         assert_eq!(result, Err(::cobs::Error::OutputBufferTooSmall));
     }
 
     {
         let cobs_encoded_data = b"\x05AAAA";
-        let mut cobs_decode_buf = [ 0xCC_u8; 5 ];
+        let mut cobs_decode_buf = [0xCC_u8; 5];
         let result = cobs::decode_array(&mut cobs_decode_buf, cobs_encoded_data);
         assert_ne!(result, Err(::cobs::Error::OutputBufferTooSmall));
     }
@@ -155,7 +157,7 @@ fn test_cobs_decode_array_buffer_too_small() {
 #[test]
 fn test_cobs_decode_array_bad() {
     // Try decoding bad data.
-    let mut cobs_decode_buf = [ 0xCC_u8; 50 ];
+    let mut cobs_decode_buf = [0xCC_u8; 50];
 
     {
         let bad_cobs_encoded_data = b"\x00sAAA";

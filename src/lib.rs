@@ -4,7 +4,6 @@
 
 #![allow(dead_code)]
 #![forbid(unsafe_code)]
-
 #![cfg_attr(not(feature = "std"), no_std)]
 
 use core::fmt;
@@ -133,7 +132,8 @@ pub mod cobs {
     pub fn encode_vector(in_buf: &[u8]) -> crate::Result<alloc::vec::Vec<u8>> {
         let mut code_i = 0;
         let mut run_len = 0_u8;
-        let mut out_vec = alloc::vec::Vec::<u8>::with_capacity(encode_max_output_size(in_buf.len()));
+        let mut out_vec =
+            alloc::vec::Vec::<u8>::with_capacity(encode_max_output_size(in_buf.len()));
 
         for x in in_buf {
             if run_len == 0xFF {
@@ -226,7 +226,8 @@ pub mod cobs {
     #[cfg(feature = "alloc")]
     pub fn decode_vector(in_buf: &[u8]) -> crate::Result<alloc::vec::Vec<u8>> {
         let mut code_i = 0;
-        let mut out_vec = alloc::vec::Vec::<u8>::with_capacity(decode_max_output_size(in_buf.len()));
+        let mut out_vec =
+            alloc::vec::Vec::<u8>::with_capacity(decode_max_output_size(in_buf.len()));
 
         if !in_buf.is_empty() {
             loop {
@@ -347,7 +348,8 @@ pub mod cobsr {
         let mut code_i = 0;
         let mut run_len = 0_u8;
         let mut last_value = 0_u8;
-        let mut out_vec = alloc::vec::Vec::<u8>::with_capacity(encode_max_output_size(in_buf.len()));
+        let mut out_vec =
+            alloc::vec::Vec::<u8>::with_capacity(encode_max_output_size(in_buf.len()));
 
         for x in in_buf {
             if run_len == 0xFF {
@@ -449,7 +451,8 @@ pub mod cobsr {
     #[cfg(feature = "alloc")]
     pub fn decode_vector(in_buf: &[u8]) -> crate::Result<alloc::vec::Vec<u8>> {
         let mut code_i = 0;
-        let mut out_vec = alloc::vec::Vec::<u8>::with_capacity(decode_max_output_size(in_buf.len()));
+        let mut out_vec =
+            alloc::vec::Vec::<u8>::with_capacity(decode_max_output_size(in_buf.len()));
 
         if !in_buf.is_empty() {
             loop {

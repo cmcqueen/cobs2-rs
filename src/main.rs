@@ -1,8 +1,8 @@
 #![allow(dead_code)]
 
 fn main() -> Result<(), cobs::Error> {
-    let mut cobs_buf = [ 0x55_u8; 1000 ];
-    let mut cobs_decode_buf = [ 0xCC_u8; 1000 ];
+    let mut cobs_buf = [0x55_u8; 1000];
+    let mut cobs_decode_buf = [0xCC_u8; 1000];
     //let data = b"";
     //let data = b"\x00";
     //let data = b"\xFF\xFF";
