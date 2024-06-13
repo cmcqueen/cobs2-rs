@@ -14,6 +14,8 @@ extern crate alloc;
 /// Errors that can occur during COBS encoding/decoding.
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub enum Error {
+    /// When reading from an input reader, an error might occur.
+    InputError,
     /// For functions that generate output in an array, such as [cobs::encode_array()], it
     /// indicates that the output array size is too small for the output data.
     OutputBufferTooSmall,
@@ -28,6 +30,13 @@ pub enum Error {
     TruncatedEncodedData,
 }
 
+#[cfg(feature = "std")]
+impl From<std::io::Error> for Error {
+    fn from(_err: std::io::Error) -> Self {
+        Error::InputError
+    }
+}
+
 /// Apply trait [std::error::Error].
 #[cfg(feature = "std")]
 impl std::error::Error for Error {}
@@ -36,6 +45,9 @@ impl std::error::Error for Error {}
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
+            Error::InputError => {
+                write!(f, "Input error")
+            }
             Error::OutputBufferTooSmall => {
                 write!(f, "Output buffer is too small")
             }
@@ -176,6 +188,63 @@ pub mod cobs {
         }
 
         Ok(out_vec)
+    }
+
+    /// Encode data into COBS encoded form, from a reader to a writer.
+    ///
+    /// The output data is COBS-encoded, containing no zero-bytes.
+    ///
+    /// The return value is a [Result] that in the `Ok` case is the number of bytes written.
+    #[cfg(feature = "std")]
+    pub fn encode_stream<R, W>(reader: &mut R, writer: &mut W) -> crate::Result<usize>
+    where
+        R: std::io::Read + ?std::marker::Sized,
+        W: std::io::Write + ?std::marker::Sized,
+    {
+        let mut out_len: usize = 0;
+        let mut run_len: usize = 0;
+        let mut x: u8 = 0;
+        let mut out_buf = [1_u8; 255];
+
+        loop {
+            let read_count = reader.read(std::slice::from_mut(&mut x))?;
+            if read_count == 0 {
+                break;
+            }
+            if run_len == 0xFF {
+                out_buf[0] = 0xFF;
+                writer.write(&out_buf[0..run_len])?;
+                out_len += run_len;
+                run_len = 0;
+            }
+            if x == 0 {
+                if run_len == 0 {
+                    run_len = 1;
+                }
+                out_buf[0] = run_len as u8;
+                writer.write(&out_buf[0..run_len])?;
+                out_len += run_len;
+                run_len = 0;
+            } else {
+                if run_len == 0 {
+                    out_buf[0] = 0xFF;
+                    run_len = 1;
+                }
+                out_buf[run_len] = x;
+                run_len += 1;
+            }
+        }
+
+        // We've reached the end of the source data.
+        // Finalise the remaining output. In particular, write the code (length) byte.
+        if run_len == 0 {
+            run_len = 1;
+        }
+        out_buf[0] = run_len as u8;
+        writer.write(&out_buf[0..run_len])?;
+        out_len += run_len;
+
+        Ok(out_len)
     }
 
     /// Decode COBS-encoded data, writing decoded data to the given output buffer.
@@ -405,6 +474,71 @@ pub mod cobsr {
         }
 
         Ok(out_vec)
+    }
+
+    /// Encode data into COBS encoded form, from a reader to a writer.
+    ///
+    /// The output data is COBS-encoded, containing no zero-bytes.
+    ///
+    /// The return value is a [Result] that in the `Ok` case is the number of bytes written.
+    #[cfg(feature = "std")]
+    pub fn encode_stream<R, W>(reader: &mut R, writer: &mut W) -> crate::Result<usize>
+    where
+        R: std::io::Read + ?std::marker::Sized,
+        W: std::io::Write + ?std::marker::Sized,
+    {
+        let mut out_len: usize = 0;
+        let mut run_len: usize = 0;
+        let mut last_value = 0_u8;
+        let mut x: u8 = 0;
+        let mut out_buf = [1_u8; 255];
+
+        loop {
+            let read_count = reader.read(std::slice::from_mut(&mut x))?;
+            if read_count == 0 {
+                break;
+            }
+            if run_len == 0xFF {
+                out_buf[0] = 0xFF;
+                writer.write(&out_buf[0..run_len])?;
+                out_len += run_len;
+                run_len = 0;
+            }
+            if x == 0 {
+                if run_len == 0 {
+                    run_len = 1;
+                }
+                out_buf[0] = run_len as u8;
+                writer.write(&out_buf[0..run_len])?;
+                out_len += run_len;
+                last_value = 0;
+                run_len = 0;
+            } else {
+                if run_len == 0 {
+                    out_buf[0] = 0xFF;
+                    run_len = 1;
+                }
+                last_value = x;
+                out_buf[run_len] = x;
+                run_len += 1;
+            }
+        }
+
+        // We've reached the end of the source data.
+        // Finalise the remaining output. In particular, write the code (length) byte.
+        if run_len == 0 {
+            run_len = 1;
+        }
+        if last_value >= run_len as u8 {
+            out_buf[0] = last_value;
+            run_len -= 1;
+        } else {
+            out_buf[0] = run_len as u8;
+        }
+        writer.write(&out_buf[0..run_len])?;
+        out_len += run_len;
+
+        Ok(out_len)
     }
 
     /// Decode COBS/R-encoded data, writing decoded data to the given output buffer.

@@ -289,3 +289,20 @@ fn test_cobs_decode_vector_predefined() {
         );
     }
 }
+
+#[cfg(feature = "alloc")]
+#[test]
+fn test_cobs_stream_predefined() {
+    for mapping in PREDEFINED_ENCODINGS.iter() {
+        let encode_in_vec = mapping.rawdata.to_vec();
+        let mut encode_out_vec = Vec::<u8>::new();
+        let enc_result = cobs::encode_stream(&mut &encode_in_vec[..], &mut encode_out_vec);
+        assert!(enc_result.is_ok());
+        assert_eq!(
+            encode_out_vec.clone(),
+            mapping.encoded,
+            "{}",
+            mapping.description
+        );
+    }
+}
