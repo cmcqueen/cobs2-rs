@@ -138,16 +138,17 @@ pub mod cobs {
         for x in in_buf {
             if run_len == 0xFF {
                 out_vec[code_i] = 0xFF;
-                code_i = out_vec.len();
+                code_i += 0xFF;
                 run_len = 0;
             }
             if *x == 0 {
                 if run_len == 0 {
                     out_vec.push(1);
+                    code_i += 1;
                 } else {
                     out_vec[code_i] = run_len;
+                    code_i += run_len as usize;
                 }
-                code_i = out_vec.len();
                 run_len = 0;
             } else {
                 if run_len == 0 {
@@ -354,16 +355,17 @@ pub mod cobsr {
         for x in in_buf {
             if run_len == 0xFF {
                 out_vec[code_i] = 0xFF;
-                code_i = out_vec.len();
+                code_i += 0xFF;
                 run_len = 0;
             }
             if *x == 0 {
                 if run_len == 0 {
                     out_vec.push(1);
+                    code_i += 1;
                 } else {
                     out_vec[code_i] = run_len;
+                    code_i += run_len as usize;
                 }
-                code_i = out_vec.len();
                 run_len = 0;
                 last_value = 0;
             } else {
