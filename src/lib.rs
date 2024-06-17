@@ -130,6 +130,80 @@ pub mod cobs {
         Ok(&out_buf[..out_i])
     }
 
+    struct EncodeIterator<'a, I>
+    where
+        I: Iterator<Item = u8> + 'a,
+    {
+        in_iter: &'a mut I,
+        eof: bool,
+        hold_write_i: u8,
+        hold_read_i: u8,
+        hold_buf: [u8; 255],
+    }
+
+    impl<'a, I> EncodeIterator<'_, I>
+    where
+        I: Iterator<Item = u8> + 'a,
+    {
+        fn new(i: &'a mut I) -> EncodeIterator<'a, I> {
+            return EncodeIterator {
+                in_iter: i,
+                eof: false,
+                hold_write_i: 0,
+                hold_read_i: 0,
+                hold_buf: [1; 255],
+            };
+        }
+    }
+
+    impl<'a, I> Iterator for EncodeIterator<'_, I>
+    where
+        I: Iterator<Item = u8> + 'a,
+    {
+        type Item = u8;
+
+        fn next(&mut self) -> Option<Self::Item> {
+            if self.hold_write_i != 0 {
+                if self.hold_read_i < self.hold_write_i {
+                    let byte_val = self.hold_buf[self.hold_read_i as usize];
+                    self.hold_read_i += 1;
+                    return Some(byte_val);
+                } else {
+                    self.hold_read_i = 0;
+                    self.hold_write_i = 0;
+                    // else drop through to loop below.
+                }
+            }
+            if self.eof {
+                return None;
+            }
+            loop {
+                if self.hold_write_i == 0xFF {
+                    return Some(0xFF)
+                } else {
+                    let in_iter_next = self.in_iter.next();
+                    let byte_val = in_iter_next.unwrap_or_else(|| {
+                        self.eof = true;
+                        0
+                    });
+                    if byte_val == 0 {
+                        return Some(self.hold_write_i + 1);
+                    } else {
+                        self.hold_buf[self.hold_write_i as usize] = byte_val;
+                        self.hold_write_i += 1;
+                    }
+                }
+            }
+        }
+    }
+
+    pub fn encode_iter<'a, I>(i: &'a mut I) -> impl Iterator<Item = u8> + 'a
+    where
+        I: Iterator<Item = u8> + 'a,
+    {
+        EncodeIterator::new(i)
+    }
+
     /// Encode data into COBS encoded form, returning output as a vector of [u8].
     ///
     /// The output data is COBS-encoded, containing no zero-bytes.
