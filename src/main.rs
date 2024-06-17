@@ -27,9 +27,10 @@ fn main() -> Result<(), cobs::Error> {
     // Try iterator-based encode
     #[cfg(feature = "alloc")]
     {
-        let in_data = data.to_vec();
-        //let in_data_iter = data.into_iter();
-        let data_cobs: Vec<u8> = cobs::cobs::encode_iter(&mut in_data.into_iter()).collect();
+        // let in_data = data.to_vec();
+        // let data_cobs: Vec<u8> = cobs::cobs::encode_iter(&mut in_data.into_iter()).collect();
+        let in_data_iter = data.to_vec().into_iter();
+        let data_cobs: Vec<u8> = cobs::cobs::encode_iter(in_data_iter).collect();
         println!("COBS encode_iter: {:X?}", data_cobs);
         let data_cobs_decoded = cobs::cobs::decode_vector(&data_cobs)?;
         println!("COBS decode_vector: {:X?}", data_cobs_decoded);

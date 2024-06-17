@@ -130,22 +130,22 @@ pub mod cobs {
         Ok(&out_buf[..out_i])
     }
 
-    struct EncodeIterator<'a, I>
+    struct EncodeIterator<I>
     where
-        I: Iterator<Item = u8> + 'a,
+        I: Iterator<Item = u8>,
     {
-        in_iter: &'a mut I,
+        in_iter: I,
         eof: bool,
         hold_write_i: u8,
         hold_read_i: u8,
         hold_buf: [u8; 255],
     }
 
-    impl<'a, I> EncodeIterator<'_, I>
+    impl<I> EncodeIterator<I>
     where
-        I: Iterator<Item = u8> + 'a,
+        I: Iterator<Item = u8>,
     {
-        fn new(i: &'a mut I) -> EncodeIterator<'a, I> {
+        fn new(i: I) -> EncodeIterator<I> {
             return EncodeIterator {
                 in_iter: i,
                 eof: false,
@@ -156,9 +156,9 @@ pub mod cobs {
         }
     }
 
-    impl<'a, I> Iterator for EncodeIterator<'_, I>
+    impl<I> Iterator for EncodeIterator<I>
     where
-        I: Iterator<Item = u8> + 'a,
+        I: Iterator<Item = u8>,
     {
         type Item = u8;
 
@@ -197,10 +197,7 @@ pub mod cobs {
         }
     }
 
-    pub fn encode_iter<'a, I>(i: &'a mut I) -> impl Iterator<Item = u8> + 'a
-    where
-        I: Iterator<Item = u8> + 'a,
-    {
+    pub fn encode_iter(i: impl Iterator<Item = u8>) -> impl Iterator<Item = u8> {
         EncodeIterator::new(i)
     }
 
