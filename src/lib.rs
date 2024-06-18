@@ -136,6 +136,7 @@ pub mod cobs {
     {
         in_iter: I,
         eof: bool,
+        last_run_0xff: bool,
         hold_write_i: u8,
         hold_read_i: u8,
         hold_buf: [u8; 255],
@@ -149,6 +150,7 @@ pub mod cobs {
             return EncodeIterator {
                 in_iter: i,
                 eof: false,
+                last_run_0xff: false,
                 hold_write_i: 0,
                 hold_read_i: 0,
                 hold_buf: [1; 255],
@@ -178,14 +180,21 @@ pub mod cobs {
                 return None;
             }
             loop {
-                if self.hold_write_i == 0xFF {
-                    return Some(0xFF)
+                if self.hold_write_i == 0xFE {
+                    self.last_run_0xff = true;
+                    return Some(0xFF);
                 } else {
                     let in_iter_next = self.in_iter.next();
                     let byte_val = in_iter_next.unwrap_or_else(|| {
                         self.eof = true;
                         0
                     });
+                    if self.last_run_0xff {
+                        self.last_run_0xff = false;
+                        if self.eof {
+                            return None;
+                        }
+                    }
                     if byte_val == 0 {
                         return Some(self.hold_write_i + 1);
                     } else {
