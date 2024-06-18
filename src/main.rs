@@ -28,6 +28,8 @@ fn main() -> Result<(), cobs::Error> {
     #[cfg(feature = "alloc")]
     {
         let in_data_vec = data.to_vec();
+        let data_cobs: Vec<u8> = cobs::cobs::encode_ref_iter(in_data_vec.iter()).collect();
+        println!("COBS encode_ref_iter: {:X?}", data_cobs);
         let data_cobs: Vec<u8> = cobs::cobs::encode_iter(in_data_vec.into_iter()).collect();
         println!("COBS encode_iter: {:X?}", data_cobs);
     }

@@ -292,6 +292,16 @@ fn test_cobs_decode_vector_predefined() {
 
 #[cfg(feature = "alloc")]
 #[test]
+fn test_cobs_ref_iter_predefined() {
+    for mapping in PREDEFINED_ENCODINGS.iter() {
+        let encode_in_vec = mapping.rawdata.to_vec();
+        let encode_out_vec: Vec<u8> = cobs::encode_ref_iter(encode_in_vec.iter()).collect();
+        assert_eq!(encode_out_vec, mapping.encoded, "{}", mapping.description);
+    }
+}
+
+#[cfg(feature = "alloc")]
+#[test]
 fn test_cobs_iter_predefined() {
     for mapping in PREDEFINED_ENCODINGS.iter() {
         let encode_in_vec = mapping.rawdata.to_vec();

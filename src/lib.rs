@@ -130,6 +130,90 @@ pub mod cobs {
         Ok(&out_buf[..out_i])
     }
 
+    struct EncodeRefIterator<'a, I>
+    where
+        I: Iterator<Item = &'a u8> + 'a,
+    {
+        in_iter: I,
+        eof: bool,
+        last_run_0xff: bool,
+        hold_write_i: u8,
+        hold_read_i: u8,
+        hold_buf: [u8; 255],
+    }
+
+    impl<'a, I> EncodeRefIterator<'a, I>
+    where
+        I: Iterator<Item = &'a u8> + 'a,
+    {
+        fn new(i: I) -> EncodeRefIterator<'a, I> {
+            return EncodeRefIterator {
+                in_iter: i,
+                eof: false,
+                last_run_0xff: false,
+                hold_write_i: 0,
+                hold_read_i: 0,
+                hold_buf: [1; 255],
+            };
+        }
+    }
+
+    impl<'a, I> Iterator for EncodeRefIterator<'a, I>
+    where
+        I: Iterator<Item = &'a u8> + 'a,
+    {
+        type Item = u8;
+
+        fn next(&mut self) -> Option<Self::Item> {
+            if self.hold_write_i != 0 {
+                if self.hold_read_i < self.hold_write_i {
+                    let byte_val = self.hold_buf[self.hold_read_i as usize];
+                    self.hold_read_i += 1;
+                    return Some(byte_val);
+                } else {
+                    self.hold_read_i = 0;
+                    self.hold_write_i = 0;
+                    // else drop through to loop below.
+                }
+            }
+            if self.eof {
+                return None;
+            }
+            loop {
+                if self.hold_write_i == 0xFE {
+                    self.last_run_0xff = true;
+                    return Some(0xFF);
+                } else {
+                    let in_iter_next = self.in_iter.next();
+                    let byte_ref = in_iter_next.unwrap_or_else(|| {
+                        self.eof = true;
+                        &0
+                    });
+                    if self.last_run_0xff {
+                        self.last_run_0xff = false;
+                        if self.eof {
+                            return None;
+                        }
+                    }
+                    if *byte_ref == 0 {
+                        let count_byte = self.hold_write_i + 1;
+                        return Some(count_byte);
+                    } else {
+                        self.hold_buf[self.hold_write_i as usize] = *byte_ref;
+                        self.hold_write_i += 1;
+                    }
+                }
+            }
+        }
+    }
+
+    pub fn encode_ref_iter<'a, I>(i: I) -> impl Iterator<Item = u8> + 'a
+    where
+        I: Iterator<Item = &'a u8> + 'a,
+    {
+        EncodeRefIterator::<'a, I>::new(i)
+    }
+
     struct EncodeIterator<I>
     where
         I: Iterator<Item = u8>,
