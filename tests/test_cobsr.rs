@@ -98,6 +98,27 @@ const PREDEFINED_DECODINGS: [DataEncodedMapping; 3] = [
 ];
 
 #[test]
+fn test_cobsr_encode_max_output_size() {
+    assert_eq!(1, cobsr::encode_max_output_size(0));
+    assert_eq!(2, cobsr::encode_max_output_size(1));
+    assert_eq!(3, cobsr::encode_max_output_size(2));
+
+    assert_eq!(254, cobsr::encode_max_output_size(253));
+    assert_eq!(255, cobsr::encode_max_output_size(254));
+    assert_eq!(257, cobsr::encode_max_output_size(255));
+    assert_eq!(258, cobsr::encode_max_output_size(256));
+
+    assert_eq!(509, cobsr::encode_max_output_size(507));
+    assert_eq!(510, cobsr::encode_max_output_size(508));
+    assert_eq!(512, cobsr::encode_max_output_size(509));
+    assert_eq!(513, cobsr::encode_max_output_size(510));
+
+    assert_eq!(usize::max_value(), cobsr::encode_max_output_size(usize::max_value()));
+    let increase = usize::max_value() / 255;
+    assert_eq!(usize::max_value(), cobsr::encode_max_output_size(usize::max_value() - increase));
+}
+
+#[test]
 fn test_cobsr_array_predefined() {
     for mapping in PREDEFINED_ENCODINGS.iter() {
         let mut encode_out_vec = vec![0_u8; cobsr::encode_max_output_size(mapping.rawdata.len())];

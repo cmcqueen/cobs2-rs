@@ -57,10 +57,17 @@ pub type Result<T> = core::result::Result<T, crate::Error>;
 pub mod cobs {
     /// Calculate the maximum possible COBS encoded output size, for a given size of input data.
     pub const fn encode_max_output_size(input_len: usize) -> usize {
-        if input_len > 0 {
-            input_len + ((input_len + 253) / 254)
-        } else {
+        if input_len == 0 {
             1
+        } else if input_len >= usize::max_value() - 253 {
+            usize::max_value()
+        } else {
+            let increase = (input_len + 253) / 254;
+            if input_len >= usize::max_value() - increase {
+                usize::max_value()
+            } else {
+                input_len + increase
+            }
         }
     }
 
@@ -265,10 +272,17 @@ pub mod cobs {
 pub mod cobsr {
     /// Calculate the maximum possible COBS/R encoded output size, for a given size of input data.
     pub const fn encode_max_output_size(input_len: usize) -> usize {
-        if input_len > 0 {
-            input_len + ((input_len + 253) / 254)
-        } else {
+        if input_len == 0 {
             1
+        } else if input_len >= usize::max_value() - 253 {
+            usize::max_value()
+        } else {
+            let increase = (input_len + 253) / 254;
+            if input_len >= usize::max_value() - increase {
+                usize::max_value()
+            } else {
+                input_len + increase
+            }
         }
     }
 
