@@ -625,6 +625,114 @@ pub mod cobsr {
         EncodeRefIterator::<'a, I>::new(i)
     }
 
+    struct EncodeIterator<I>
+    where
+        I: Iterator<Item = u8>,
+    {
+        in_iter: I,
+        in_lookahead: Option<Option<u8>>,
+        eof: bool,
+        last_run_0xff: bool,
+        hold_write_i: u8,
+        hold_read_i: u8,
+        hold_buf: [u8; 255],
+    }
+
+    impl<I> EncodeIterator<I>
+    where
+        I: Iterator<Item = u8>,
+    {
+        fn new(i: I) -> EncodeIterator<I> {
+            return EncodeIterator {
+                in_iter: i,
+                in_lookahead: None,
+                eof: false,
+                last_run_0xff: false,
+                hold_write_i: 0,
+                hold_read_i: 0,
+                hold_buf: [1; 255],
+            };
+        }
+    }
+
+    impl<I> Iterator for EncodeIterator<I>
+    where
+        I: Iterator<Item = u8>,
+    {
+        type Item = u8;
+
+        fn next(&mut self) -> Option<Self::Item> {
+            let mut last_byte: u8 = 0;
+
+            if self.hold_write_i != 0 {
+                if self.hold_read_i < self.hold_write_i {
+                    let byte_val = self.hold_buf[self.hold_read_i as usize];
+                    self.hold_read_i += 1;
+                    return Some(byte_val);
+                } else {
+                    self.hold_read_i = 0;
+                    self.hold_write_i = 0;
+                    // else drop through to loop below.
+                }
+            }
+            if self.eof {
+                return None;
+            }
+            loop {
+                if self.hold_write_i == 0xFE {
+                    self.last_run_0xff = true;
+                    let in_iter_next = self.in_iter.next();
+                    if in_iter_next.is_none() {
+                        self.eof = true;
+                        if last_byte >= 0xFF {
+                            self.hold_write_i -= 1;
+                        }
+                    }
+                    self.in_lookahead = Some(in_iter_next);
+                    return Some(0xFF);
+                } else {
+                    let in_iter_next = if self.in_lookahead.is_some() {
+                        self.in_lookahead.take().unwrap()
+                    } else {
+                        self.in_iter.next()
+                    };
+                    let byte_val = in_iter_next.unwrap_or_else(|| {
+                        self.eof = true;
+                        0
+                    });
+                    if self.last_run_0xff {
+                        self.last_run_0xff = false;
+                        if self.eof {
+                            return None;
+                        }
+                    }
+                    if byte_val == 0 {
+                        let run_len = self.hold_write_i + 1;
+                        let count_byte =
+                            if self.eof && self.hold_write_i > 0 && last_byte >= run_len {
+                                self.hold_write_i -= 1;
+                                last_byte
+                            } else {
+                                run_len
+                            };
+                        return Some(count_byte);
+                    } else {
+                        last_byte = byte_val;
+                        self.hold_buf[self.hold_write_i as usize] = byte_val;
+                        self.hold_write_i += 1;
+                    }
+                }
+            }
+        }
+    }
+
+    pub fn encode_iter<I>(i: I) -> impl Iterator<Item = u8>
+    where
+        I: Iterator<Item = u8>,
+    {
+        EncodeIterator::<I>::new(i)
+    }
+
     /// Encode data into COBS/R encoded form, returning output as a vector of [u8].
     ///
     /// The output data is COBS/R-encoded, containing no zero-bytes.

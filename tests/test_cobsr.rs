@@ -292,3 +292,13 @@ fn test_cobsr_ref_iter_predefined() {
         assert_eq!(encode_out_vec, mapping.encoded, "{}", mapping.description);
     }
 }
+
+#[cfg(feature = "alloc")]
+#[test]
+fn test_cobsr_iter_predefined() {
+    for mapping in PREDEFINED_ENCODINGS.iter() {
+        let encode_in_vec = mapping.rawdata.to_vec();
+        let encode_out_vec: Vec<u8> = cobsr::encode_iter(encode_in_vec.into_iter()).collect();
+        assert_eq!(encode_out_vec, mapping.encoded, "{}", mapping.description);
+    }
+}
