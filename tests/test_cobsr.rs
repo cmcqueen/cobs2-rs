@@ -80,9 +80,16 @@ const PREDEFINED_ENCODINGS: [DataEncodedMapping; 31] = [
  * Decoding-specific tests. These are for unusual encoded data, which a correct encoder wouldn't normally generate, but
  * could be encountered from a different encoder implementation that generates non-optimal encodings.
  */
-const PREDEFINED_DECODINGS: [DataEncodedMapping; 3] = [
+const PREDEFINED_DECODINGS: [DataEncodedMapping; 11] = [
     // Handle an empty string, returning an empty string.
     DataEncodedMapping { description: "empty", rawdata: b"",                      encoded: b""                            },
+    DataEncodedMapping { description: "1 byte 0x02",                    rawdata: b"\x02",                              encoded: b"\x02\x02"                        },
+    DataEncodedMapping { description: "1 byte 0x03",                    rawdata: b"\x03",                              encoded: b"\x02\x03"                        },
+    DataEncodedMapping { description: "1 byte 0xFE",                    rawdata: b"\xFE",                              encoded: b"\x02\xFE"                        },
+    DataEncodedMapping { description: "1 byte 0xFF",                    rawdata: b"\xFF",                              encoded: b"\x02\xFF"                        },
+    DataEncodedMapping { description: "2 bytes ending 0x03",            rawdata: b"a\x03",                             encoded: b"\x03a\x03"                       },
+    DataEncodedMapping { description: "2 bytes ending 0xFF",            rawdata: b"a\xFF",                             encoded: b"\x03a\xFF"                       },
+    DataEncodedMapping { description: "5 non-zero bytes ending 0x35",   rawdata: b"12345",                             encoded: b"\x0612345"                       },
     DataEncodedMapping {
         description: "254 non-zero bytes",
         rawdata: b"0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst1234",
@@ -90,10 +97,16 @@ const PREDEFINED_DECODINGS: [DataEncodedMapping; 3] = [
         encoded: b"\xFF0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst1234\x01",
     },
     DataEncodedMapping {
-        description: "254 non-zero bytes, ending with a final FF",
+        description: "254 non-zero bytes, ending with a final FF, naive 1",
         rawdata: b"0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst123\xFF",
         // A naive COBS/R encoder implementation might not handle this edge case optimally, and output a trailing \xFF.
         encoded: b"\xFF0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst123\xFF",
+    },
+    DataEncodedMapping {
+        description: "254 non-zero bytes, ending with a final FF, naive 2",
+        rawdata: b"0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst123\xFF",
+        // A naive COBS/R encoder implementation might not handle this edge case optimally, and output a trailing \xFF AND a trailing \x01.
+        encoded: b"\xFF0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst0123456789ABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrst123\xFF\x01",
     },
 ];
 
