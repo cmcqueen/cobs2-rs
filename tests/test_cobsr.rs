@@ -82,7 +82,7 @@ const PREDEFINED_ENCODINGS: [DataEncodedMapping; 31] = [
  */
 const PREDEFINED_DECODINGS: [DataEncodedMapping; 11] = [
     // Handle an empty string, returning an empty string.
-    DataEncodedMapping { description: "empty", rawdata: b"",                      encoded: b""                            },
+    DataEncodedMapping { description: "empty",                          rawdata: b"",                                  encoded: b""                                },
     DataEncodedMapping { description: "1 byte 0x02",                    rawdata: b"\x02",                              encoded: b"\x02\x02"                        },
     DataEncodedMapping { description: "1 byte 0x03",                    rawdata: b"\x03",                              encoded: b"\x02\x03"                        },
     DataEncodedMapping { description: "1 byte 0xFE",                    rawdata: b"\xFE",                              encoded: b"\x02\xFE"                        },
@@ -126,9 +126,15 @@ fn test_cobsr_encode_max_output_size() {
     assert_eq!(512, cobsr::encode_max_output_size(509));
     assert_eq!(513, cobsr::encode_max_output_size(510));
 
-    assert_eq!(usize::max_value(), cobsr::encode_max_output_size(usize::max_value()));
+    assert_eq!(
+        usize::max_value(),
+        cobsr::encode_max_output_size(usize::max_value())
+    );
     let increase = usize::max_value() / 255;
-    assert_eq!(usize::max_value(), cobsr::encode_max_output_size(usize::max_value() - increase));
+    assert_eq!(
+        usize::max_value(),
+        cobsr::encode_max_output_size(usize::max_value() - increase)
+    );
 }
 
 #[test]
@@ -137,13 +143,23 @@ fn test_cobsr_array_predefined() {
         let mut encode_out_vec = vec![0_u8; cobsr::encode_max_output_size(mapping.rawdata.len())];
         let enc_result = cobsr::encode_array(&mut encode_out_vec[..], mapping.rawdata);
         assert!(enc_result.is_ok());
-        assert_eq!(enc_result.clone().unwrap(), mapping.encoded, "{}", mapping.description);
+        assert_eq!(
+            enc_result.clone().unwrap(),
+            mapping.encoded,
+            "{}",
+            mapping.description
+        );
 
         let mut decode_out_vec =
             vec![0_u8; cobsr::decode_max_output_size(enc_result.clone().unwrap().len())];
         let dec_result = cobsr::decode_array(&mut decode_out_vec[..], &enc_result.unwrap());
         assert!(dec_result.is_ok());
-        assert_eq!(dec_result.unwrap(), mapping.rawdata, "{}", mapping.description);
+        assert_eq!(
+            dec_result.unwrap(),
+            mapping.rawdata,
+            "{}",
+            mapping.description
+        );
     }
 }
 
@@ -153,7 +169,12 @@ fn test_cobsr_decode_array_predefined() {
         let mut decode_out_vec = vec![0_u8; cobsr::decode_max_output_size(mapping.encoded.len())];
         let dec_result = cobsr::decode_array(&mut decode_out_vec[..], mapping.encoded);
         assert!(dec_result.is_ok());
-        assert_eq!(dec_result.unwrap(), mapping.rawdata, "{}", mapping.description);
+        assert_eq!(
+            dec_result.unwrap(),
+            mapping.rawdata,
+            "{}",
+            mapping.description
+        );
     }
 }
 
@@ -229,11 +250,21 @@ fn test_cobsr_vector_predefined() {
     for mapping in PREDEFINED_ENCODINGS.iter() {
         let enc_result = cobsr::encode_vector(mapping.rawdata);
         assert!(enc_result.is_ok());
-        assert_eq!(enc_result.clone().unwrap(), mapping.encoded, "{}", mapping.description);
+        assert_eq!(
+            enc_result.clone().unwrap(),
+            mapping.encoded,
+            "{}",
+            mapping.description
+        );
 
         let dec_result = cobsr::decode_vector(&enc_result.unwrap());
         assert!(dec_result.is_ok());
-        assert_eq!(dec_result.unwrap(), mapping.rawdata, "{}", mapping.description);
+        assert_eq!(
+            dec_result.unwrap(),
+            mapping.rawdata,
+            "{}",
+            mapping.description
+        );
     }
 }
 
@@ -243,6 +274,11 @@ fn test_cobsr_decode_vector_predefined() {
     for mapping in PREDEFINED_DECODINGS.iter() {
         let dec_result = cobsr::decode_vector(mapping.encoded);
         assert!(dec_result.is_ok());
-        assert_eq!(dec_result.unwrap(), mapping.rawdata, "{}", mapping.description);
+        assert_eq!(
+            dec_result.unwrap(),
+            mapping.rawdata,
+            "{}",
+            mapping.description
+        );
     }
 }

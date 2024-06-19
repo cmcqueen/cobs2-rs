@@ -84,9 +84,15 @@ fn test_cobs_encode_max_output_size() {
     assert_eq!(512, cobs::encode_max_output_size(509));
     assert_eq!(513, cobs::encode_max_output_size(510));
 
-    assert_eq!(usize::max_value(), cobs::encode_max_output_size(usize::max_value()));
+    assert_eq!(
+        usize::max_value(),
+        cobs::encode_max_output_size(usize::max_value())
+    );
     let increase = usize::max_value() / 255;
-    assert_eq!(usize::max_value(), cobs::encode_max_output_size(usize::max_value() - increase));
+    assert_eq!(
+        usize::max_value(),
+        cobs::encode_max_output_size(usize::max_value() - increase)
+    );
 }
 
 #[test]
@@ -95,20 +101,35 @@ fn test_cobs_array_predefined() {
         let mut encode_out_vec = vec![0_u8; cobs::encode_max_output_size(mapping.rawdata.len())];
         let enc_result = cobs::encode_array(&mut encode_out_vec[..], mapping.rawdata);
         assert!(enc_result.is_ok());
-        assert_eq!(enc_result.clone().unwrap(), mapping.encoded, "{}", mapping.description);
+        assert_eq!(
+            enc_result.clone().unwrap(),
+            mapping.encoded,
+            "{}",
+            mapping.description
+        );
 
         let mut decode_out_vec =
             vec![0_u8; cobs::decode_max_output_size(enc_result.clone().unwrap().len())];
         let dec_result = cobs::decode_array(&mut decode_out_vec[..], &enc_result.clone().unwrap());
         assert!(dec_result.is_ok());
-        assert_eq!(dec_result.unwrap(), mapping.rawdata, "{}", mapping.description);
+        assert_eq!(
+            dec_result.unwrap(),
+            mapping.rawdata,
+            "{}",
+            mapping.description
+        );
 
         // COBS/R decode function should also be able to decode COBS-encoded rawdata.
         let mut decode_out_vec =
             vec![0_u8; cobsr::decode_max_output_size(enc_result.clone().unwrap().len())];
         let dec_result = cobsr::decode_array(&mut decode_out_vec[..], &enc_result.unwrap());
         assert!(dec_result.is_ok());
-        assert_eq!(dec_result.unwrap(), mapping.rawdata, "{}", mapping.description);
+        assert_eq!(
+            dec_result.unwrap(),
+            mapping.rawdata,
+            "{}",
+            mapping.description
+        );
     }
 }
 
@@ -118,13 +139,23 @@ fn test_cobs_decode_array_predefined() {
         let mut decode_out_vec = vec![0_u8; cobs::decode_max_output_size(mapping.encoded.len())];
         let dec_result = cobs::decode_array(&mut decode_out_vec[..], mapping.encoded);
         assert!(dec_result.is_ok());
-        assert_eq!(dec_result.unwrap(), mapping.rawdata, "{}", mapping.description);
+        assert_eq!(
+            dec_result.unwrap(),
+            mapping.rawdata,
+            "{}",
+            mapping.description
+        );
 
         // COBS/R decode function should also be able to decode COBS-encoded rawdata.
         let mut decode_out_vec = vec![0_u8; cobsr::decode_max_output_size(mapping.encoded.len())];
         let dec_result = cobsr::decode_array(&mut decode_out_vec[..], mapping.encoded);
         assert!(dec_result.is_ok());
-        assert_eq!(dec_result.unwrap(), mapping.rawdata, "{}", mapping.description);
+        assert_eq!(
+            dec_result.unwrap(),
+            mapping.rawdata,
+            "{}",
+            mapping.description
+        );
     }
 }
 
@@ -206,16 +237,31 @@ fn test_cobs_vector_predefined() {
     for mapping in PREDEFINED_ENCODINGS.iter() {
         let enc_result = cobs::encode_vector(mapping.rawdata);
         assert!(enc_result.is_ok());
-        assert_eq!(enc_result.clone().unwrap(), mapping.encoded, "{}", mapping.description);
+        assert_eq!(
+            enc_result.clone().unwrap(),
+            mapping.encoded,
+            "{}",
+            mapping.description
+        );
 
         let dec_result = cobs::decode_vector(&enc_result.clone().unwrap());
         assert!(dec_result.is_ok());
-        assert_eq!(dec_result.unwrap(), mapping.rawdata, "{}", mapping.description);
+        assert_eq!(
+            dec_result.unwrap(),
+            mapping.rawdata,
+            "{}",
+            mapping.description
+        );
 
         // COBS/R decode function should also be able to decode COBS-encoded rawdata.
         let dec_result = cobsr::decode_vector(&enc_result.unwrap());
         assert!(dec_result.is_ok());
-        assert_eq!(dec_result.unwrap(), mapping.rawdata, "{}", mapping.description);
+        assert_eq!(
+            dec_result.unwrap(),
+            mapping.rawdata,
+            "{}",
+            mapping.description
+        );
     }
 }
 
@@ -225,11 +271,21 @@ fn test_cobs_decode_vector_predefined() {
     for mapping in PREDEFINED_DECODINGS.iter() {
         let dec_result = cobs::decode_vector(mapping.encoded);
         assert!(dec_result.is_ok());
-        assert_eq!(dec_result.unwrap(), mapping.rawdata, "{}", mapping.description);
+        assert_eq!(
+            dec_result.unwrap(),
+            mapping.rawdata,
+            "{}",
+            mapping.description
+        );
 
         // COBS/R decode function should also be able to decode COBS-encoded rawdata.
         let dec_result = cobsr::decode_vector(mapping.encoded);
         assert!(dec_result.is_ok());
-        assert_eq!(dec_result.unwrap(), mapping.rawdata, "{}", mapping.description);
+        assert_eq!(
+            dec_result.unwrap(),
+            mapping.rawdata,
+            "{}",
+            mapping.description
+        );
     }
 }
