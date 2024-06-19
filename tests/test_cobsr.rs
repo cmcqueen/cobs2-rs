@@ -360,6 +360,9 @@ fn test_cobsr_ref_iter_predefined() {
         let encode_in_vec = mapping.rawdata.to_vec();
         let encode_out_vec: Vec<u8> = cobsr::encode_ref_iter(encode_in_vec.iter()).collect();
         assert_eq!(encode_out_vec, mapping.encoded, "{}", mapping.description);
+
+        let decode_out_vec: Vec<u8> = cobsr::decode_ref_iter(encode_out_vec.iter()).collect();
+        assert_eq!(decode_out_vec, mapping.rawdata, "{}", mapping.description);
     }
 }
 
@@ -370,5 +373,28 @@ fn test_cobsr_iter_predefined() {
         let encode_in_vec = mapping.rawdata.to_vec();
         let encode_out_vec: Vec<u8> = cobsr::encode_iter(encode_in_vec.into_iter()).collect();
         assert_eq!(encode_out_vec, mapping.encoded, "{}", mapping.description);
+
+        let decode_out_vec: Vec<u8> = cobsr::decode_iter(encode_out_vec.into_iter()).collect();
+        assert_eq!(decode_out_vec, mapping.rawdata, "{}", mapping.description);
+    }
+}
+
+#[cfg(feature = "alloc")]
+#[test]
+fn test_cobsr_decode_ref_iter_predefined() {
+    for mapping in PREDEFINED_DECODINGS.iter() {
+        let decode_in_vec = mapping.encoded.to_vec();
+        let decode_out_vec: Vec<u8> = cobsr::decode_ref_iter(decode_in_vec.iter()).collect();
+        assert_eq!(decode_out_vec, mapping.rawdata, "{}", mapping.description);
+    }
+}
+
+#[cfg(feature = "alloc")]
+#[test]
+fn test_cobsr_decode_iter_predefined() {
+    for mapping in PREDEFINED_DECODINGS.iter() {
+        let decode_in_vec = mapping.encoded.to_vec();
+        let decode_out_vec: Vec<u8> = cobsr::decode_iter(decode_in_vec.into_iter()).collect();
+        assert_eq!(decode_out_vec, mapping.rawdata, "{}", mapping.description);
     }
 }

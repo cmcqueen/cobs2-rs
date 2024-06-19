@@ -1053,6 +1053,152 @@ pub mod cobsr {
         Ok(&out_buf[..out_i])
     }
 
+    struct DecodeRefIterator<'a, I>
+    where
+        I: Iterator<Item = &'a u8> + 'a,
+    {
+        in_iter: I,
+        eof: bool,
+        last_run: u8,
+        count_run: u8,
+    }
+
+    impl<'a, I> DecodeRefIterator<'a, I>
+    where
+        I: Iterator<Item = &'a u8> + 'a,
+    {
+        fn new(i: I) -> DecodeRefIterator<'a, I> {
+            return DecodeRefIterator {
+                in_iter: i,
+                eof: false,
+                last_run: 0,
+                count_run: 0,
+            };
+        }
+    }
+
+    impl<'a, I> Iterator for DecodeRefIterator<'a, I>
+    where
+        I: Iterator<Item = &'a u8> + 'a,
+    {
+        type Item = u8;
+
+        fn next(&mut self) -> Option<Self::Item> {
+            loop {
+                if self.eof {
+                    self.eof = false;
+                    return None;
+                }
+                let in_iter_next = self.in_iter.next();
+                let byte_val = in_iter_next.map(|x| *x).unwrap_or(0);
+                if byte_val == 0 {
+                    if self.count_run != 0 {
+                        self.eof = true;
+                        return Some(self.last_run);
+                    } else {
+                        return None;
+                    }
+                }
+                if self.count_run == 0 {
+                    let last_run = self.last_run;
+                    self.last_run = byte_val;
+                    self.count_run = byte_val - 1;
+                    if last_run != 0 && last_run != 0xFF {
+                        return Some(0);
+                    }
+                } else {
+                    self.count_run -= 1;
+                    return Some(byte_val);
+                }
+            }
+        }
+
+        fn size_hint(&self) -> (usize, Option<usize>) {
+            let in_iter_size_hint = self.in_iter.size_hint();
+            decode_size_hint(in_iter_size_hint)
+        }
+    }
+
+    pub fn decode_ref_iter<'a, I>(i: I) -> impl Iterator<Item = u8> + 'a
+    where
+        I: Iterator<Item = &'a u8> + 'a,
+    {
+        DecodeRefIterator::<'a, I>::new(i)
+    }
+
+    struct DecodeIterator<I>
+    where
+        I: Iterator<Item = u8>,
+    {
+        in_iter: I,
+        eof: bool,
+        last_run: u8,
+        count_run: u8,
+    }
+
+    impl<I> DecodeIterator<I>
+    where
+        I: Iterator<Item = u8>,
+    {
+        fn new(i: I) -> DecodeIterator<I> {
+            return DecodeIterator {
+                in_iter: i,
+                eof: false,
+                last_run: 0,
+                count_run: 0,
+            };
+        }
+    }
+
+    impl<I> Iterator for DecodeIterator<I>
+    where
+        I: Iterator<Item = u8>,
+    {
+        type Item = u8;
+
+        fn next(&mut self) -> Option<Self::Item> {
+            loop {
+                if self.eof {
+                    self.eof = false;
+                    return None;
+                }
+                let in_iter_next = self.in_iter.next();
+                let byte_val = in_iter_next.unwrap_or(0);
+                if byte_val == 0 {
+                    if self.count_run != 0 {
+                        self.eof = true;
+                        return Some(self.last_run);
+                    } else {
+                        return None;
+                    }
+                }
+                if self.count_run == 0 {
+                    let last_run = self.last_run;
+                    self.last_run = byte_val;
+                    self.count_run = byte_val - 1;
+                    if last_run != 0 && last_run != 0xFF {
+                        return Some(0);
+                    }
+                } else {
+                    self.count_run -= 1;
+                    return Some(byte_val);
+                }
+            }
+        }
+
+        fn size_hint(&self) -> (usize, Option<usize>) {
+            let in_iter_size_hint = self.in_iter.size_hint();
+            decode_size_hint(in_iter_size_hint)
+        }
+    }
+
+    pub fn decode_iter<I>(i: I) -> impl Iterator<Item = u8>
+    where
+        I: Iterator<Item = u8>,
+    {
+        DecodeIterator::<I>::new(i)
+    }
+
     /// Decode COBS/R-encoded data, returning output as a vector of [u8].
     ///
     /// The return value is a [Result] that in the `Ok` case is a vector of [u8].
