@@ -55,6 +55,15 @@ pub type Result<T> = core::result::Result<T, crate::Error>;
 
 /// This module contains functions for standard COBS encoding and decoding.
 pub mod cobs {
+    /// Calculate the minimum possible COBS encoded output size, for a given size of input data.
+    pub const fn encode_min_output_size(input_len: usize) -> usize {
+        if input_len >= usize::max_value() - 1 {
+            usize::max_value()
+        } else {
+            input_len + 1
+        }
+    }
+
     /// Calculate the maximum possible COBS encoded output size, for a given size of input data.
     pub const fn encode_max_output_size(input_len: usize) -> usize {
         if input_len == 0 {
@@ -71,13 +80,37 @@ pub mod cobs {
         }
     }
 
+    /// Common function for converting an iterator encoder's input iterator size hint to an output size hint.
+    fn encode_size_hint(in_hint: (usize, Option<usize>)) -> (usize, Option<usize>) {
+        let lower_bound = encode_min_output_size(in_hint.0);
+        let upper_bound = in_hint.1.map(|x| encode_max_output_size(x));
+        (lower_bound, upper_bound)
+    }
+
+    /// Calculate the minimum possible decoded output size, for a given size of COBS-encoded input.
+    pub const fn decode_min_output_size(input_len: usize) -> usize {
+        if input_len >= 1 {
+            let increase = (input_len - 1) / 255;
+            input_len - 1 - increase
+        } else {
+            0
+        }
+    }
+
     /// Calculate the maximum possible decoded output size, for a given size of COBS-encoded input.
     pub const fn decode_max_output_size(input_len: usize) -> usize {
         if input_len > 1 {
             input_len - 1
         } else {
-            1
+            0
         }
+    }
+
+    /// Common function for converting an iterator decoder's input iterator size hint to an output size hint.
+    fn decode_size_hint(in_hint: (usize, Option<usize>)) -> (usize, Option<usize>) {
+        let lower_bound = decode_min_output_size(in_hint.0);
+        let upper_bound = in_hint.1.map(|x| decode_max_output_size(x));
+        (lower_bound, upper_bound)
     }
 
     /// Encode data into COBS encoded form, writing output to the given output buffer.
@@ -205,6 +238,11 @@ pub mod cobs {
                 }
             }
         }
+
+        fn size_hint(&self) -> (usize, Option<usize>) {
+            let in_iter_size_hint = self.in_iter.size_hint();
+            encode_size_hint(in_iter_size_hint)
+        }
     }
 
     pub fn encode_ref_iter<'a, I>(i: I) -> impl Iterator<Item = u8> + 'a
@@ -287,6 +325,11 @@ pub mod cobs {
                     }
                 }
             }
+        }
+
+        fn size_hint(&self) -> (usize, Option<usize>) {
+            let in_iter_size_hint = self.in_iter.size_hint();
+            encode_size_hint(in_iter_size_hint)
         }
     }
 
@@ -434,6 +477,15 @@ pub mod cobs {
 
 /// This module contains functions for a variant of COBS, called COBS/R.
 pub mod cobsr {
+    /// Calculate the minimum possible COBS/R encoded output size, for a given size of input data.
+    pub const fn encode_min_output_size(input_len: usize) -> usize {
+        if input_len == 0 {
+            1
+        } else {
+            input_len
+        }
+    }
+
     /// Calculate the maximum possible COBS/R encoded output size, for a given size of input data.
     pub const fn encode_max_output_size(input_len: usize) -> usize {
         if input_len == 0 {
@@ -450,13 +502,35 @@ pub mod cobsr {
         }
     }
 
+    /// Common function for converting an iterator encoder's input iterator size hint to an output size hint.
+    fn encode_size_hint(in_hint: (usize, Option<usize>)) -> (usize, Option<usize>) {
+        let lower_bound = encode_min_output_size(in_hint.0);
+        let upper_bound = in_hint.1.map(|x| encode_max_output_size(x));
+        (lower_bound, upper_bound)
+    }
+
+    /// Calculate the minimum possible decoded output size, for a given size of COBS-encoded input.
+    ///
+    /// Worst-case is for decoding output from a naive COBS encoder. So, same as for COBS decoding.
+    pub const fn decode_min_output_size(input_len: usize) -> usize {
+        if input_len >= 1 {
+            let increase = (input_len - 1) / 255;
+            input_len - 1 - increase
+        } else {
+            0
+        }
+    }
+
     /// Calculate the maximum possible decoded output size, for a given size of COBS/R-encoded input.
     pub const fn decode_max_output_size(input_len: usize) -> usize {
-        if input_len > 0 {
-            input_len
-        } else {
-            1
-        }
+        input_len
+    }
+
+    /// Common function for converting an iterator decoder's input iterator size hint to an output size hint.
+    fn decode_size_hint(in_hint: (usize, Option<usize>)) -> (usize, Option<usize>) {
+        let lower_bound = decode_min_output_size(in_hint.0);
+        let upper_bound = in_hint.1.map(|x| decode_max_output_size(x));
+        (lower_bound, upper_bound)
     }
 
     /// Encode data into COBS/R encoded form, writing output to the given output buffer.
@@ -616,6 +690,11 @@ pub mod cobsr {
                 }
             }
         }
+
+        fn size_hint(&self) -> (usize, Option<usize>) {
+            let in_iter_size_hint = self.in_iter.size_hint();
+            encode_size_hint(in_iter_size_hint)
+        }
     }
 
     pub fn encode_ref_iter<'a, I>(i: I) -> impl Iterator<Item = u8> + 'a
@@ -723,6 +802,11 @@ pub mod cobsr {
                     }
                 }
             }
+        }
+
+        fn size_hint(&self) -> (usize, Option<usize>) {
+            let in_iter_size_hint = self.in_iter.size_hint();
+            encode_size_hint(in_iter_size_hint)
         }
     }
 

@@ -111,6 +111,32 @@ const PREDEFINED_DECODINGS: [DataEncodedMapping; 11] = [
 ];
 
 #[test]
+fn test_cobsr_encode_min_output_size() {
+    assert_eq!(1, cobsr::encode_min_output_size(0));
+    assert_eq!(1, cobsr::encode_min_output_size(1));
+    assert_eq!(2, cobsr::encode_min_output_size(2));
+
+    assert_eq!(253, cobsr::encode_min_output_size(253));
+    assert_eq!(254, cobsr::encode_min_output_size(254));
+    assert_eq!(255, cobsr::encode_min_output_size(255));
+    assert_eq!(256, cobsr::encode_min_output_size(256));
+
+    assert_eq!(507, cobsr::encode_min_output_size(507));
+    assert_eq!(508, cobsr::encode_min_output_size(508));
+    assert_eq!(509, cobsr::encode_min_output_size(509));
+    assert_eq!(510, cobsr::encode_min_output_size(510));
+
+    assert_eq!(
+        usize::max_value(),
+        cobsr::encode_min_output_size(usize::max_value())
+    );
+    assert_eq!(
+        usize::max_value() - 1,
+        cobsr::encode_min_output_size(usize::max_value() - 1)
+    );
+}
+
+#[test]
 fn test_cobsr_encode_max_output_size() {
     assert_eq!(1, cobsr::encode_max_output_size(0));
     assert_eq!(2, cobsr::encode_max_output_size(1));
@@ -134,6 +160,50 @@ fn test_cobsr_encode_max_output_size() {
     assert_eq!(
         usize::max_value(),
         cobsr::encode_max_output_size(usize::max_value() - increase)
+    );
+}
+
+#[test]
+fn test_cobs_decode_min_output_size() {
+    assert_eq!(0, cobsr::decode_min_output_size(0));
+    assert_eq!(0, cobsr::decode_min_output_size(1));
+    assert_eq!(1, cobsr::decode_min_output_size(2));
+    assert_eq!(2, cobsr::decode_min_output_size(3));
+
+    assert_eq!(253, cobsr::decode_min_output_size(254));
+    assert_eq!(254, cobsr::decode_min_output_size(255));
+    assert_eq!(254, cobsr::decode_min_output_size(256));
+    assert_eq!(255, cobsr::decode_min_output_size(257));
+
+    assert_eq!(507, cobsr::decode_min_output_size(509));
+    assert_eq!(508, cobsr::decode_min_output_size(510));
+    assert_eq!(508, cobsr::decode_min_output_size(511));
+    assert_eq!(509, cobsr::decode_min_output_size(512));
+
+    assert_eq!(
+        usize::max_value() - (usize::max_value() - 2) / 255 - 2,
+        cobsr::decode_min_output_size(usize::max_value() - 1)
+    );
+    assert_eq!(
+        usize::max_value() - (usize::max_value() - 1) / 255 - 1,
+        cobsr::decode_min_output_size(usize::max_value())
+    );
+}
+
+#[test]
+fn test_cobs_decode_max_output_size() {
+    assert_eq!(0, cobsr::decode_max_output_size(0));
+    assert_eq!(1, cobsr::decode_max_output_size(1));
+    assert_eq!(2, cobsr::decode_max_output_size(2));
+    assert_eq!(3, cobsr::decode_max_output_size(3));
+
+    assert_eq!(
+        usize::max_value() - 1,
+        cobsr::decode_max_output_size(usize::max_value() - 1)
+    );
+    assert_eq!(
+        usize::max_value(),
+        cobsr::decode_max_output_size(usize::max_value())
     );
 }
 
