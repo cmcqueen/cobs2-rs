@@ -164,7 +164,7 @@ fn test_cobsr_encode_max_output_size() {
 }
 
 #[test]
-fn test_cobs_decode_min_output_size() {
+fn test_cobsr_decode_min_output_size() {
     assert_eq!(0, cobsr::decode_min_output_size(0));
     assert_eq!(0, cobsr::decode_min_output_size(1));
     assert_eq!(1, cobsr::decode_min_output_size(2));
@@ -191,7 +191,7 @@ fn test_cobs_decode_min_output_size() {
 }
 
 #[test]
-fn test_cobs_decode_max_output_size() {
+fn test_cobsr_decode_max_output_size() {
     assert_eq!(0, cobsr::decode_max_output_size(0));
     assert_eq!(1, cobsr::decode_max_output_size(1));
     assert_eq!(2, cobsr::decode_max_output_size(2));
@@ -252,29 +252,29 @@ fn test_cobsr_decode_array_predefined() {
 fn test_cobsr_encode_array_buffer_too_small() {
     {
         let in_data = b"\x01\x01\x01\x01\x01";
-        let mut cobs_encode_buf = [0xCC_u8; 5];
-        let result = cobsr::encode_array(&mut cobs_encode_buf, in_data);
+        let mut cobsr_encode_buf = [0xCC_u8; 5];
+        let result = cobsr::encode_array(&mut cobsr_encode_buf, in_data);
         assert_eq!(result, Err(::cobs::Error::OutputBufferTooSmall));
     }
 
     {
         let in_data = b"\x01\x01\x01\x01\x01";
-        let mut cobs_encode_buf = [0xCC_u8; 6];
-        let result = cobsr::encode_array(&mut cobs_encode_buf, in_data);
+        let mut cobsr_encode_buf = [0xCC_u8; 6];
+        let result = cobsr::encode_array(&mut cobsr_encode_buf, in_data);
         assert_ne!(result, Err(::cobs::Error::OutputBufferTooSmall));
     }
 
     {
         let in_data = b"\x00\x00\x00\x00\x00";
-        let mut cobs_encode_buf = [0xCC_u8; 5];
-        let result = cobsr::encode_array(&mut cobs_encode_buf, in_data);
+        let mut cobsr_encode_buf = [0xCC_u8; 5];
+        let result = cobsr::encode_array(&mut cobsr_encode_buf, in_data);
         assert_eq!(result, Err(::cobs::Error::OutputBufferTooSmall));
     }
 
     {
         let in_data = b"\x00\x00\x00\x00\x00";
-        let mut cobs_encode_buf = [0xCC_u8; 6];
-        let result = cobsr::encode_array(&mut cobs_encode_buf, in_data);
+        let mut cobsr_encode_buf = [0xCC_u8; 6];
+        let result = cobsr::encode_array(&mut cobsr_encode_buf, in_data);
         assert_ne!(result, Err(::cobs::Error::OutputBufferTooSmall));
     }
 }
