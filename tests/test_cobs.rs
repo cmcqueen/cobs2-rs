@@ -1,5 +1,7 @@
 use ::cobs::{cobs, cobsr};
 
+use bytes::Bytes;
+
 struct DataEncodedMapping<'a> {
     pub description: &'a str,
     pub rawdata: &'a [u8],
@@ -403,5 +405,31 @@ fn test_cobs_decode_iter_predefined() {
         let decode_in_vec = mapping.encoded.to_vec();
         let decode_out_vec: Vec<u8> = cobs::decode_iter(decode_in_vec.into_iter()).collect();
         assert_eq!(decode_out_vec, mapping.rawdata, "{}", mapping.description);
+    }
+}
+
+#[test]
+/// Show how the ref iterator API can be used with other containers. Eg [Bytes].
+fn test_cobs_ref_iter_predefined_w_bytes() {
+    for mapping in PREDEFINED_ENCODINGS.iter() {
+        let encode_in_bytes = Bytes::from(mapping.rawdata);
+        let encode_out_bytes: Bytes = cobs::encode_ref_iter(encode_in_bytes.iter()).collect();
+        assert_eq!(encode_out_bytes, mapping.encoded, "{}", mapping.description);
+
+        let decode_out_bytes: Bytes = cobs::decode_ref_iter(encode_out_bytes.iter()).collect();
+        assert_eq!(decode_out_bytes, mapping.rawdata, "{}", mapping.description);
+    }
+}
+
+#[test]
+/// Show how the iterator API can be used with other containers. Eg [Bytes].
+fn test_cobs_iter_predefined_w_bytes() {
+    for mapping in PREDEFINED_ENCODINGS.iter() {
+        let encode_in_bytes = Bytes::from(mapping.rawdata);
+        let encode_out_bytes: Bytes = cobs::encode_iter(encode_in_bytes.into_iter()).collect();
+        assert_eq!(encode_out_bytes, mapping.encoded, "{}", mapping.description);
+
+        let decode_out_bytes: Bytes = cobs::decode_iter(encode_out_bytes.into_iter()).collect();
+        assert_eq!(decode_out_bytes, mapping.rawdata, "{}", mapping.description);
     }
 }
