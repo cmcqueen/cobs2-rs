@@ -71,11 +71,19 @@ The following are not implemented:
 
 ## Usage
 
-The modules provide an `encode` and a `decode` function.
+The modules provide functions for encoding and decoding. Several implementations
+are provided, which differ in the input and output data types.
 
-## Integration Testing
+* Arrays (no_std)
+    * `encode_array()`
+    * `decode_array()`
+* Vectors
+    * `encode_vector()`
+    * `decode_vector()`
 
-Integration testing is implemented:
+## Unit Testing
+
+Unit testing is implemented:
 
     cargo test
 
@@ -113,7 +121,7 @@ Input:
     2F A2 00 92 73 02
 
 This example is encoded the same in COBS and COBS/R. Encoded (length code bytes
-are marked):
+are highlighted):
 
     **03** 2F A2 **04** 92 73 02
 
@@ -126,7 +134,7 @@ Input:
 
     2F A2 00 92 73 26
 
-Encoded in plain COBS (length code bytes are marked):
+Encoded in plain COBS (length code bytes are highlighted):
 
     **03** 2F A2 **04** 92 73 26
 
