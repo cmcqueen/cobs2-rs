@@ -1,4 +1,4 @@
-/// This module contains functions for standard COBS encoding and decoding.
+//! This module contains functions for standard COBS encoding and decoding.
 
 /// Calculate the minimum possible COBS encoded output size, for a given size of input data.
 pub const fn encode_min_output_size(input_len: usize) -> usize {
@@ -190,6 +190,13 @@ where
     }
 }
 
+/// Encode data into COBS encoded form, getting data from a `&u8` iterator, and providing the output as an iterator.
+///
+/// The output data is COBS-encoded, containing no zero-bytes.
+///
+/// The caller must provide a `&u8` iterator.
+///
+/// The return value is a `u8` iterator. This is suitable to `collect()` into a byte container.
 pub fn encode_ref_iter<'a, I>(i: I) -> impl Iterator<Item = u8> + 'a
 where
     I: Iterator<Item = &'a u8> + 'a,
@@ -278,6 +285,13 @@ where
     }
 }
 
+/// Encode data into COBS encoded form, getting data from a `u8` iterator, and providing the output as an iterator.
+///
+/// The output data is COBS-encoded, containing no zero-bytes.
+///
+/// The caller must provide a `u8` iterator.
+///
+/// The return value is a `u8` iterator. This is suitable to `collect()` into a byte container.
 pub fn encode_iter(i: impl Iterator<Item = u8>) -> impl Iterator<Item = u8> {
     EncodeIterator::new(i)
 }
@@ -291,8 +305,7 @@ pub fn encode_iter(i: impl Iterator<Item = u8>) -> impl Iterator<Item = u8> {
 pub fn encode_vector(in_buf: &[u8]) -> crate::Result<alloc::vec::Vec<u8>> {
     let mut code_i = 0;
     let mut run_len = 0_u8;
-    let mut out_vec =
-        alloc::vec::Vec::<u8>::with_capacity(encode_max_output_size(in_buf.len()));
+    let mut out_vec = alloc::vec::Vec::<u8>::with_capacity(encode_max_output_size(in_buf.len()));
 
     for x in in_buf {
         if run_len == 0xFF {
@@ -437,6 +450,18 @@ where
     }
 }
 
+/// Decode COBS-encoded data, getting data from a `&u8` iterator, and providing the output as an iterator.
+///
+/// The input data should be COBS-encoded, containing no zero-bytes.
+///
+/// The caller must provide a `&u8` iterator.
+///
+/// The return value is a `u8` iterator. This is suitable to `collect()` into a byte container.
+///
+/// Unlike the other decode functions, no errors are returned by this function. Rather, decoding is
+/// best-effort. In the event of any zero in the input, this will be regarded as end-of-data. If
+/// insufficient bytes are present following a length code, the output will simply stop at the end
+/// of the available data.
 pub fn decode_ref_iter<'a, I>(i: I) -> impl Iterator<Item = u8> + 'a
 where
     I: Iterator<Item = &'a u8> + 'a,
@@ -501,6 +526,18 @@ where
     }
 }
 
+/// Decode COBS-encoded data, getting data from a `u8` iterator, and providing the output as an iterator.
+///
+/// The input data should be COBS-encoded, containing no zero-bytes.
+///
+/// The caller must provide a `u8` iterator.
+///
+/// The return value is a `u8` iterator. This is suitable to `collect()` into a byte container.
+///
+/// Unlike the other decode functions, no errors are returned by this function. Rather, decoding is
+/// best-effort. In the event of any zero in the input, this will be regarded as end-of-data. If
+/// insufficient bytes are present following a length code, the output will simply stop at the end
+/// of the available data.
 pub fn decode_iter<I>(i: I) -> impl Iterator<Item = u8>
 where
     I: Iterator<Item = u8>,
@@ -514,8 +551,7 @@ where
 #[cfg(feature = "alloc")]
 pub fn decode_vector(in_buf: &[u8]) -> crate::Result<alloc::vec::Vec<u8>> {
     let mut code_i = 0;
-    let mut out_vec =
-        alloc::vec::Vec::<u8>::with_capacity(decode_max_output_size(in_buf.len()));
+    let mut out_vec = alloc::vec::Vec::<u8>::with_capacity(decode_max_output_size(in_buf.len()));
 
     if !in_buf.is_empty() {
         loop {
