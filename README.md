@@ -80,6 +80,11 @@ are provided, which differ in the input and output data types.
 * Vectors
     * `encode_vector()`
     * `decode_vector()`
+* Iterators
+    * `encode_iter()`
+    * `decode_iter()`
+    * `encode_ref_iter()`
+    * `decode_ref_iter()`
 
 ## Unit Testing
 
