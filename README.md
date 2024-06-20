@@ -58,8 +58,8 @@ http://tools.ietf.org/html/draft-ietf-pppext-cobs-00
 
 ## Modules Provided
 
-* `cobs::cobs` — Consistent Overhead Byte Stuffing (basic method)
-* `cobs::cobsr` — COBS/R — Consistent Overhead Byte Stuffing—Reduced
+* `cobs2::cobs` — Consistent Overhead Byte Stuffing (basic method)
+* `cobs2::cobsr` — COBS/R — Consistent Overhead Byte Stuffing—Reduced
 
 "Consistent Overhead Byte Stuffing—Reduced" (COBS/R) is my own invention,
 a modification of basic COBS encoding, and is described in more detail below.
@@ -99,7 +99,7 @@ The code is released under the MIT license. See LICENSE.txt for details.
 ## Consistent Overhead Byte Stuffing—Reduced (COBS/R)
 
 A modification of COBS, which I'm calling "Consistent Overhead Byte
-Stuffing—Reduced" (COBS/R), is provided in the `cobs::cobsr` module. Its
+Stuffing—Reduced" (COBS/R), is provided in the `cobs2::cobsr` module. Its
 purpose is to save one byte from the encoded form in some cases. Plain COBS
 encoding always has a +1 byte encoding overhead. See the references for
 details. COBS/R can often avoid the +1 byte, which can be a useful

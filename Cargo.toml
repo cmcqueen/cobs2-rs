@@ -1,6 +1,7 @@
 [package]
-name = "cobs"
-version = "0.0.1"
+name = "cobs2"
+description = "Consistent Overhead Byte Stuffing — COBS — and variant COBS/R"
+version = "0.1.0"
 authors = ["Craig McQueen <craig.mcqueen@innerrange.com>"]
 license = "MIT"
 readme = "README.md"
@@ -15,7 +16,7 @@ edition = "2018"
 bytes = "1.6.0"
 
 [[bin]]
-name = "cobs"
+name = "cobs2"
 test = false
 
 [lib]
