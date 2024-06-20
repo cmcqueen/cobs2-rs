@@ -1,11 +1,11 @@
 [package]
 name = "cobs2"
 description = "Consistent Overhead Byte Stuffing — COBS — and variant COBS/R"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Craig McQueen <craig.mcqueen@innerrange.com>"]
 license = "MIT"
 readme = "README.md"
-repository = "https://github.com/cmcqueen/cobs-rs"
+repository = "https://github.com/cmcqueen/cobs2-rs"
 keywords = ["byte-stuffing", "cobs", "cobsr"]
 categories = ["algorithms", "encoding", "no-std"]
 edition = "2018"
