@@ -4,8 +4,8 @@ Rust functions for encoding and decoding COBS.
 
 ## Intro
 
-The `cobs` package is provided, which contains modules containing functions
-for encoding and decoding according to COBS methods.
+This crate provides functions for encoding and decoding of COBS, and a minor
+variant of COBS known as COBS/R.
 
 
 ### What Is COBS?
@@ -123,12 +123,12 @@ The byte values in the examples are in hex.
 
 Input:
 
-    2F A2 00 92 73 02
+> 2F A2 00 92 73 02
 
 This example is encoded the same in COBS and COBS/R. Encoded (length code bytes
 are highlighted):
 
-    **03** 2F A2 **04** 92 73 02
+> **03** 2F A2 **04** 92 73 02
 
 #### Second example
 
@@ -137,15 +137,15 @@ greater than what the length byte would be.
 
 Input:
 
-    2F A2 00 92 73 26
+> 2F A2 00 92 73 26
 
 Encoded in plain COBS (length code bytes are highlighted):
 
-    **03** 2F A2 **04** 92 73 26
+> **03** 2F A2 **04** 92 73 26
 
 Encoded in COBS/R:
 
-    **03** 2F A2 **26** 92 73
+> **03** 2F A2 **26** 92 73
 
 Because the last data byte (`26`) is greater than the usual length code
 (`04`), the last data byte can be inserted in place of the length code, and
