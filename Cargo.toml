@@ -2,7 +2,7 @@
 name = "cobs2"
 description = "Consistent Overhead Byte Stuffing — COBS — and variant COBS/R"
 version = "0.1.3"
-authors = ["Craig McQueen <craig.mcqueen@innerrange.com>"]
+authors = ["Craig McQueen <craig@mcqueen.au>"]
 license = "MIT"
 readme = "README.md"
 repository = "https://github.com/cmcqueen/cobs2-rs"
