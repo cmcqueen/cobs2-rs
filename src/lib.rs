@@ -1,6 +1,69 @@
-/*!
- * Encoding and decoding of COBS (Consistent Overhead Byte Stuffing)
- */
+//! Encoding and decoding of COBS (Consistent Overhead Byte Stuffing)
+//!
+//! ## Intro
+//!
+//! This crate provides functions for encoding and decoding of COBS, and a minor variant of COBS
+//! known as COBS/R.
+//!
+//! ### What Is COBS?
+//!
+//! COBS is a method of encoding a packet of bytes into a form that contains no bytes with value
+//! zero (`0x00`). The input packet of bytes can contain bytes in the full range of `0x00` to
+//! `0xFF`. The COBS encoded packet is guaranteed to generate packets with bytes only in the range
+//! `0x01` to `0xFF`. Thus, in a communication protocol, packet boundaries can be reliably
+//! delimited with `0x00` bytes.
+//!
+//! The COBS encoding does have to increase the packet size to achieve this encoding. However,
+//! compared to other byte-stuffing methods, the packet size increase is reasonable and
+//! predictable. COBS always adds 1 byte to the message length. Additionally, for longer packets
+//! of length *n*, it *may* add n/254 (rounded down) additional bytes to the encoded packet size.
+//!
+//! For example, compare to the PPP protocol, which uses `0x7E` bytes to delimit PPP packets. The
+//! PPP protocol uses an "escape" style of byte stuffing, replacing all occurences of `0x7E` bytes
+//! in the packet with `0x7D 0x5E`. But that byte-stuffing method can potentially double the size
+//! of the packet in the worst case. COBS uses a different method for byte-stuffing, which has a
+//! much more reasonable worst-case overhead.
+//!
+//! For more details about COBS, see the references.
+//!
+//! I have included a variant on COBS, COBS/R, which slightly modifies COBS to often avoid the +1
+//! byte overhead of COBS. So in many cases, especially for smaller packets, the size of a COBS/R
+//! encoded packet is the same size as the original packet. See below for more details about COBS/R.
+//!
+//! ### References
+//!
+//! Consistent Overhead Byte Stuffing  
+//! Stuart Cheshire and Mary Baker  
+//! IEEE/ACM Transations on Networking, Vol. 7, No. 2, April 1999
+//!
+//! Consistent Overhead Byte Stuffing (for IEEE)  
+//! <http://www.stuartcheshire.org/papers/COBSforToN.pdf>
+//!
+//! PPP Consistent Overhead Byte Stuffing (COBS)  
+//! PPP Working Group Internet Draft  
+//! James Carlson, IronBridge Networks  
+//! Stuart Cheshire and Mary Baker, Stanford University  
+//! November 1997
+//!
+//! PPP Consistent Overhead Byte Stuffing (COBS)  
+//! <http://tools.ietf.org/html/draft-ietf-pppext-cobs-00>
+//!
+//! ## Modules Provided
+//!
+//! * `cobs2::cobs` — Consistent Overhead Byte Stuffing (basic method)
+//! * `cobs2::cobsr` — COBS/R — Consistent Overhead Byte Stuffing—Reduced
+//!
+//! "Consistent Overhead Byte Stuffing—Reduced" (COBS/R) is my own invention, a modification of
+//! basic COBS encoding, and is described in more detail below.
+//!
+//! The following are not implemented:
+//!
+//! * COBS/ZPE — Consistent Overhead Byte Stuffing—Zero Pair Elimination
+//! * COBS/ZRE — Consistent Overhead Byte Stuffing—Zero Run Elimination
+//!
+//! ## License
+//!
+//! The code is released under the MIT license. See LICENSE.txt for details.
 
 #![allow(dead_code)]
 #![forbid(unsafe_code)]
