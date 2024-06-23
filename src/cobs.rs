@@ -68,6 +68,11 @@ fn decode_size_hint(in_hint: (usize, Option<usize>)) -> (usize, Option<usize>) {
 ///
 /// The return value is a [Result] that in the `Ok` case is a slice of the valid data in the
 /// output buffer.
+///
+///     let mut cobs_buf = [0x55_u8; 1000];
+///     let data = b"ABC\0ghij\0xyz";
+///     let data_cobs = cobs2::cobs::encode_array(&mut cobs_buf, data);
+///     assert_eq!(data_cobs.unwrap(), b"\x04ABC\x05ghij\x04xyz");
 pub fn encode_array<'a>(out_buf: &'a mut [u8], in_buf: &[u8]) -> crate::Result<&'a [u8]> {
     let mut code_i = 0;
     let mut out_i = 1;
@@ -113,6 +118,10 @@ pub fn encode_array<'a>(out_buf: &'a mut [u8], in_buf: &[u8]) -> crate::Result<&
 /// The output data is COBS-encoded, containing no zero-bytes.
 ///
 /// The return value is a [Result] that in the `Ok` case is a vector of `u8`.
+///
+///     let data = b"ABC\0ghij\0xyz";
+///     let data_cobs = cobs2::cobs::encode_vector(data);
+///     assert_eq!(data_cobs.unwrap(), b"\x04ABC\x05ghij\x04xyz".to_vec());
 #[cfg(feature = "alloc")]
 pub fn encode_vector(in_buf: &[u8]) -> crate::Result<alloc::vec::Vec<u8>> {
     let mut code_i = 0;
@@ -243,6 +252,10 @@ where
 /// The caller must provide a `u8` iterator.
 ///
 /// The return value is a `u8` iterator. This is suitable to `collect()` into a byte container.
+///
+///     let data = b"ABC\0ghij\0xyz".to_vec();
+///     let data_cobs: Vec<u8> = cobs2::cobs::encode_iter(data.into_iter()).collect();
+///     assert_eq!(data_cobs, b"\x04ABC\x05ghij\x04xyz".to_vec());
 pub fn encode_iter(i: impl Iterator<Item = u8>) -> impl Iterator<Item = u8> {
     EncodeIterator::new(i)
 }
@@ -254,6 +267,10 @@ pub fn encode_iter(i: impl Iterator<Item = u8>) -> impl Iterator<Item = u8> {
 /// The caller must provide a `&u8` iterator.
 ///
 /// The return value is a `u8` iterator. This is suitable to `collect()` into a byte container.
+///
+///     let data = b"ABC\0ghij\0xyz".to_vec();
+///     let data_cobs: Vec<u8> = cobs2::cobs::encode_ref_iter(data.iter()).collect();
+///     assert_eq!(data_cobs, b"\x04ABC\x05ghij\x04xyz".to_vec());
 pub fn encode_ref_iter<'a, I>(i: I) -> impl Iterator<Item = u8> + 'a
 where
     I: Iterator<Item = &'a u8> + 'a,
@@ -269,6 +286,11 @@ where
 ///
 /// The return value is a [Result] that in the `Ok` case is a slice of the decoded data in the
 /// output buffer.
+///
+///     let mut decode_buf = [0x55_u8; 1000];
+///     let data_cobs = b"\x04ABC\x05ghij\x04xyz";
+///     let decode_data = cobs2::cobs::decode_array(&mut decode_buf, data_cobs);
+///     assert_eq!(decode_data.unwrap(), b"ABC\0ghij\0xyz");
 pub fn decode_array<'a>(out_buf: &'a mut [u8], in_buf: &[u8]) -> crate::Result<&'a [u8]> {
     let mut code_i = 0;
     let mut out_i = 0;
@@ -314,6 +336,10 @@ pub fn decode_array<'a>(out_buf: &'a mut [u8], in_buf: &[u8]) -> crate::Result<&
 /// Decode COBS-encoded data, returning output as a vector of `u8`.
 ///
 /// The return value is a [Result] that in the `Ok` case is a vector of `u8`.
+///
+///     let data_cobs = b"\x04ABC\x05ghij\x04xyz";
+///     let decode_data = cobs2::cobs::decode_vector(data_cobs);
+///     assert_eq!(decode_data.unwrap(), b"ABC\0ghij\0xyz");
 #[cfg(feature = "alloc")]
 pub fn decode_vector(in_buf: &[u8]) -> crate::Result<alloc::vec::Vec<u8>> {
     let mut code_i = 0;
@@ -418,6 +444,10 @@ where
 /// best-effort. In the event of any zero in the input, this will be regarded as end-of-data. If
 /// insufficient bytes are present following a length code, the output will simply stop at the end
 /// of the available data.
+///
+///     let data_cobs = b"\x04ABC\x05ghij\x04xyz".to_vec();
+///     let decode_data: Vec<u8> = cobs2::cobs::decode_iter(data_cobs.into_iter()).collect();
+///     assert_eq!(decode_data, b"ABC\0ghij\0xyz");
 pub fn decode_iter<I>(i: I) -> impl Iterator<Item = u8>
 where
     I: Iterator<Item = u8>,
@@ -437,6 +467,10 @@ where
 /// best-effort. In the event of any zero in the input, this will be regarded as end-of-data. If
 /// insufficient bytes are present following a length code, the output will simply stop at the end
 /// of the available data.
+///
+///     let data_cobs = b"\x04ABC\x05ghij\x04xyz".to_vec();
+///     let decode_data: Vec<u8> = cobs2::cobs::decode_ref_iter(data_cobs.iter()).collect();
+///     assert_eq!(decode_data, b"ABC\0ghij\0xyz");
 pub fn decode_ref_iter<'a, I>(i: I) -> impl Iterator<Item = u8> + 'a
 where
     I: Iterator<Item = &'a u8> + 'a,
@@ -521,6 +555,10 @@ where
 ///
 /// The return value is a `crate::Result<u8>` iterator. This is suitable to `collect()` into a
 /// byte container wrapped in `crate::Result<>`.
+///
+///     let data_cobs = b"\x04ABC\x05ghij\x04xyz".to_vec();
+///     let decode_data: cobs2::Result<Vec<u8>> = cobs2::cobs::decode_result_iter(data_cobs.into_iter()).collect();
+///     assert_eq!(decode_data.unwrap(), b"ABC\0ghij\0xyz");
 pub fn decode_result_iter<I>(i: I) -> impl Iterator<Item = crate::Result<u8>>
 where
     I: Iterator<Item = u8>,
@@ -536,6 +574,10 @@ where
 ///
 /// The return value is a `crate::Result<u8>` iterator. This is suitable to `collect()` into a
 /// byte container wrapped in `crate::Result<>`.
+///
+///     let data_cobs = b"\x04ABC\x05ghij\x04xyz".to_vec();
+///     let decode_data: cobs2::Result<Vec<u8>> = cobs2::cobs::decode_result_ref_iter(data_cobs.iter()).collect();
+///     assert_eq!(decode_data.unwrap(), b"ABC\0ghij\0xyz");
 pub fn decode_result_ref_iter<'a, I>(i: I) -> impl Iterator<Item = crate::Result<u8>> + 'a
 where
     I: Iterator<Item = &'a u8> + 'a,
