@@ -1,4 +1,4 @@
-use ::cobs2::{cobs, cobsr};
+use ::cobs2::{cobs, cobsr, Result};
 
 use bytes::Bytes;
 
@@ -422,6 +422,60 @@ fn test_cobs_decode_ref_iter_predefined() {
         let decode_out_vec: Vec<u8> = cobs::decode_ref_iter(decode_in_vec.iter()).collect();
         assert_eq!(decode_out_vec, mapping.rawdata, "{}", mapping.description);
     }
+}
+
+#[cfg(feature = "alloc")]
+#[test]
+fn test_cobs_decode_result_iter_predefined() {
+    for mapping in PREDEFINED_ENCODINGS.iter().chain(PREDEFINED_DECODINGS.iter()) {
+        let decode_in_vec = mapping.encoded.to_vec();
+        let decode_out_result_vec: Result<Vec<u8>> = cobs::decode_result_iter(decode_in_vec.into_iter()).collect();
+        assert!(decode_out_result_vec.is_ok(), "{}", mapping.description);
+        assert_eq!(decode_out_result_vec.unwrap_or_default(), mapping.rawdata, "{}", mapping.description);
+    }
+}
+
+#[cfg(feature = "alloc")]
+#[test]
+fn test_cobs_decode_result_ref_iter_predefined() {
+    for mapping in PREDEFINED_ENCODINGS.iter().chain(PREDEFINED_DECODINGS.iter()) {
+        let decode_in_vec = mapping.encoded.to_vec();
+        let decode_out_result_vec: Result<Vec<u8>> = cobs::decode_result_ref_iter(decode_in_vec.iter()).collect();
+        assert!(decode_out_result_vec.is_ok(), "{}", mapping.description);
+        assert_eq!(decode_out_result_vec.unwrap_or_default(), mapping.rawdata, "{}", mapping.description);
+    }
+}
+
+#[test]
+fn test_cobs_decode_result_iter_bad() {
+    // Try decoding bad data.
+    let bad_cobs_encoded_data = b"\x00sAAA".to_vec();
+    let result: Result<Vec<u8>> = cobs::decode_result_iter(bad_cobs_encoded_data.into_iter()).collect();
+    assert_eq!(result, Err(::cobs2::Error::ZeroInEncodedData));
+
+    let bad_cobs_encoded_data = b"\x05AAA".to_vec();
+    let result: Result<Vec<u8>> = cobs::decode_result_iter(bad_cobs_encoded_data.into_iter()).collect();
+    assert_eq!(result, Err(::cobs2::Error::TruncatedEncodedData));
+
+    let bad_cobs_encoded_data = b"\x05\x00AAA".to_vec();
+    let result: Result<Vec<u8>> = cobs::decode_result_iter(bad_cobs_encoded_data.into_iter()).collect();
+    assert_eq!(result, Err(::cobs2::Error::ZeroInEncodedData));
+}
+
+#[test]
+fn test_cobs_decode_result_ref_iter_bad() {
+    // Try decoding bad data.
+    let bad_cobs_encoded_data = b"\x00sAAA".to_vec();
+    let result: Result<Vec<u8>> = cobs::decode_result_ref_iter(bad_cobs_encoded_data.iter()).collect();
+    assert_eq!(result, Err(::cobs2::Error::ZeroInEncodedData));
+
+    let bad_cobs_encoded_data = b"\x05AAA".to_vec();
+    let result: Result<Vec<u8>> = cobs::decode_result_ref_iter(bad_cobs_encoded_data.iter()).collect();
+    assert_eq!(result, Err(::cobs2::Error::TruncatedEncodedData));
+
+    let bad_cobs_encoded_data = b"\x05\x00AAA".to_vec();
+    let result: Result<Vec<u8>> = cobs::decode_result_ref_iter(bad_cobs_encoded_data.iter()).collect();
+    assert_eq!(result, Err(::cobs2::Error::ZeroInEncodedData));
 }
 
 #[test]
