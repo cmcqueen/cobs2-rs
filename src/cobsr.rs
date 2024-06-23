@@ -548,3 +548,102 @@ where
 {
     DecodeIterator::<_>::new(i.copied())
 }
+
+struct DecodeResultIterator<I>
+where
+    I: Iterator<Item = u8>,
+{
+    in_iter: I,
+    eof: bool,
+    last_run: u8,
+    count_run: u8,
+}
+
+impl<I> DecodeResultIterator<I>
+where
+    I: Iterator<Item = u8>,
+{
+    fn new(i: I) -> DecodeResultIterator<I> {
+        return DecodeResultIterator {
+            in_iter: i,
+            eof: false,
+            last_run: 0,
+            count_run: 0,
+        };
+    }
+}
+
+impl<I> Iterator for DecodeResultIterator<I>
+where
+    I: Iterator<Item = u8>,
+{
+    type Item = crate::Result<u8>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        loop {
+            if self.eof {
+                return None;
+            }
+            let in_iter_next = self.in_iter.next();
+            if in_iter_next.is_none() {
+                self.eof = true;
+                if self.count_run != 0 {
+                    return Some(Ok(self.last_run));
+                } else {
+                    return None;
+                }
+            }
+            let byte_val = in_iter_next.unwrap();
+            if byte_val == 0 {
+                self.eof = true;
+                return Some(Err(crate::Error::ZeroInEncodedData));
+            }
+            if self.count_run == 0 {
+                let last_run = self.last_run;
+                self.last_run = byte_val;
+                self.count_run = byte_val - 1;
+                if last_run != 0 && last_run != 0xFF {
+                    return Some(Ok(0));
+                }
+            } else {
+                self.count_run -= 1;
+                return Some(Ok(byte_val));
+            }
+        }
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let in_iter_size_hint = self.in_iter.size_hint();
+        decode_size_hint(in_iter_size_hint)
+    }
+}
+
+/// Decode COBS/R-encoded data, getting data from a `u8` iterator, and providing the output as an iterator.
+///
+/// The input data should be COBS/R-encoded, containing no zero-bytes.
+///
+/// The caller must provide a `u8` iterator.
+///
+/// The return value is a `crate::Result<u8>` iterator. This is suitable to `collect()` into a
+/// byte container wrapped in `crate::Result<>`.
+pub fn decode_result_iter<I>(i: I) -> impl Iterator<Item = crate::Result<u8>>
+where
+    I: Iterator<Item = u8>,
+{
+    DecodeResultIterator::<I>::new(i)
+}
+
+/// Decode COBS/R-encoded data, getting data from a `&u8` iterator, and providing the output as an iterator.
+///
+/// The input data should be COBS/R-encoded, containing no zero-bytes.
+///
+/// The caller must provide a `&u8` iterator.
+///
+/// The return value is a `crate::Result<u8>` iterator. This is suitable to `collect()` into a
+/// byte container wrapped in `crate::Result<>`.
+pub fn decode_result_ref_iter<'a, I>(i: I) -> impl Iterator<Item = crate::Result<u8>> + 'a
+where
+    I: Iterator<Item = &'a u8> + 'a,
+{
+    DecodeResultIterator::<_>::new(i.copied())
+}

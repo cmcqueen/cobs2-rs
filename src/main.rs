@@ -32,6 +32,10 @@ fn main() -> Result<(), cobs2::Error> {
         println!("COBS encode_ref_iter: {:X?}", data_cobs);
         let data_cobs: Vec<u8> = cobs2::cobs::encode_iter(in_data_vec.into_iter()).collect();
         println!("COBS encode_iter: {:X?}", data_cobs);
+        let data_cobs_decoded: Vec<u8> = cobs2::cobs::decode_iter(data_cobs.clone().into_iter()).collect();
+        println!("COBS decode_iter: {:X?}", data_cobs_decoded);
+        let data_cobs_decoded: cobs2::Result<Vec<u8>> = cobs2::cobs::decode_result_iter(data_cobs.into_iter()).collect();
+        println!("COBS decode_result_iter: {:X?}", data_cobs_decoded);
     }
 
     // Deliberately try decoding bad data.
@@ -39,9 +43,13 @@ fn main() -> Result<(), cobs2::Error> {
         let bad_cobs_encoded_data = b"\x00sAAA";
         let result = cobs2::cobs::decode_array(&mut cobs_decode_buf, bad_cobs_encoded_data);
         assert_eq!(result, Err(cobs2::Error::ZeroInEncodedData));
+        let result: cobs2::Result<Vec<u8>> = cobs2::cobs::decode_result_iter(bad_cobs_encoded_data.into_iter().copied()).collect();
+        assert_eq!(result, Err(cobs2::Error::ZeroInEncodedData));
 
         let bad_cobs_encoded_data = b"\x05AAA";
         let result = cobs2::cobs::decode_array(&mut cobs_decode_buf, bad_cobs_encoded_data);
+        assert_eq!(result, Err(cobs2::Error::TruncatedEncodedData));
+        let result: cobs2::Result<Vec<u8>> = cobs2::cobs::decode_result_iter(bad_cobs_encoded_data.into_iter().copied()).collect();
         assert_eq!(result, Err(cobs2::Error::TruncatedEncodedData));
     }
 
