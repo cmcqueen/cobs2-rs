@@ -26,9 +26,12 @@
 //!
 //! For more details about COBS, see the references.
 //!
+//! ### What is COBS/R?
+//!
 //! I have included a variant on COBS, COBS/R, which slightly modifies COBS to often avoid the +1
 //! byte overhead of COBS. So in many cases, especially for smaller packets, the size of a COBS/R
-//! encoded packet is the same size as the original packet. See below for more details about COBS/R.
+//! encoded packet is the same size as the original packet. See the [cobsr] module for more details
+//! about COBS/R.
 //!
 //! ### References
 //!
@@ -47,19 +50,6 @@
 //!
 //! PPP Consistent Overhead Byte Stuffing (COBS)  
 //! <http://tools.ietf.org/html/draft-ietf-pppext-cobs-00>
-//!
-//! ## Modules Provided
-//!
-//! * `cobs2::cobs` — Consistent Overhead Byte Stuffing (basic method)
-//! * `cobs2::cobsr` — COBS/R — Consistent Overhead Byte Stuffing—Reduced
-//!
-//! "Consistent Overhead Byte Stuffing—Reduced" (COBS/R) is my own invention, a modification of
-//! basic COBS encoding, and is described in more detail below.
-//!
-//! The following are not implemented:
-//!
-//! * COBS/ZPE — Consistent Overhead Byte Stuffing—Zero Pair Elimination
-//! * COBS/ZRE — Consistent Overhead Byte Stuffing—Zero Run Elimination
 //!
 //! ## License
 //!

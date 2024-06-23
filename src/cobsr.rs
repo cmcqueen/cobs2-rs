@@ -168,11 +168,11 @@ pub fn encode_array<'a>(out_buf: &'a mut [u8], in_buf: &[u8]) -> crate::Result<&
     Ok(&out_buf[..out_i])
 }
 
-/// Encode data into COBS/R encoded form, returning output as a vector of [u8].
+/// Encode data into COBS/R encoded form, returning output as a vector of `u8`.
 ///
 /// The output data is COBS/R-encoded, containing no zero-bytes.
 ///
-/// The return value is a [Result] that in the `Ok` case is a vector of [u8].
+/// The return value is a [Result] that in the `Ok` case is a vector of `u8`.
 #[cfg(feature = "alloc")]
 pub fn encode_vector(in_buf: &[u8]) -> crate::Result<alloc::vec::Vec<u8>> {
     let mut code_i = 0;
@@ -408,9 +408,9 @@ pub fn decode_array<'a>(out_buf: &'a mut [u8], in_buf: &[u8]) -> crate::Result<&
     Ok(&out_buf[..out_i])
 }
 
-/// Decode COBS/R-encoded data, returning output as a vector of [u8].
+/// Decode COBS/R-encoded data, returning output as a vector of `u8`.
 ///
-/// The return value is a [Result] that in the `Ok` case is a vector of [u8].
+/// The return value is a [Result] that in the `Ok` case is a vector of `u8`.
 #[cfg(feature = "alloc")]
 pub fn decode_vector(in_buf: &[u8]) -> crate::Result<alloc::vec::Vec<u8>> {
     let mut code_i = 0;
