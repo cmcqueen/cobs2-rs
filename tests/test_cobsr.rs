@@ -355,6 +355,18 @@ fn test_cobsr_decode_vector_predefined() {
     }
 }
 
+#[test]
+fn test_cobsr_decode_vector_bad() {
+    // Try decoding bad data.
+    let bad_cobs_encoded_data = b"\x00sAAA";
+    let result = cobsr::decode_vector(bad_cobs_encoded_data);
+    assert_eq!(result, Err(::cobs2::Error::ZeroInEncodedData));
+
+    let bad_cobs_encoded_data = b"\x05\x00AAA";
+    let result = cobsr::decode_vector(bad_cobs_encoded_data);
+    assert_eq!(result, Err(::cobs2::Error::ZeroInEncodedData));
+}
+
 #[cfg(feature = "alloc")]
 #[test]
 fn test_cobsr_iter_predefined() {
