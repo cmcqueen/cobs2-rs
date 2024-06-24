@@ -1,5 +1,7 @@
 //! This module contains functions for standard COBS encoding and decoding.
 
+use crate::{Error, Result};
+
 /// Calculate the minimum possible COBS encoded output size, for a given size of input data.
 pub const fn encode_min_output_size(input_len: usize) -> usize {
     if input_len >= usize::max_value() - 1 {
@@ -63,29 +65,36 @@ fn decode_size_hint(in_hint: (usize, Option<usize>)) -> (usize, Option<usize>) {
 /// The output data is COBS-encoded, containing no zero-bytes.
 ///
 /// The caller must provide a reference to a suitably-sized output buffer.
-/// [encode_max_output_size()] calculates the required output buffer size, for a given input
+/// [`encode_max_output_size()`] calculates the required output buffer size, for a given input
 /// size.
 ///
-/// The return value is a [Result] that in the `Ok` case is a slice of the valid data in the
+/// The return value is a [`Result`] that in the [`Ok`] case is a slice of the valid data in the
 /// output buffer.
+///
+/// The following errors could be returned:
+///
+/// * [`Error::OutputBufferTooSmall`]
+///
+/// Example:
 ///
 ///     let mut cobs_buf = [0x55_u8; 1000];
 ///     let data = b"ABC\0ghij\0xyz";
 ///     let data_cobs = cobs2::cobs::encode_array(&mut cobs_buf, data);
 ///     assert_eq!(data_cobs.unwrap(), b"\x04ABC\x05ghij\x04xyz");
-pub fn encode_array<'a>(out_buf: &'a mut [u8], in_buf: &[u8]) -> crate::Result<&'a [u8]> {
+///
+pub fn encode_array<'a>(out_buf: &'a mut [u8], in_buf: &[u8]) -> Result<&'a [u8]> {
     let mut code_i = 0;
     let mut out_i = 1;
 
     if code_i >= out_buf.len() {
-        return Err(crate::Error::OutputBufferTooSmall);
+        return Err(Error::OutputBufferTooSmall);
     }
     for x in in_buf {
         if out_i - code_i >= 0xFF {
             out_buf[code_i] = 0xFF;
             code_i = out_i;
             if code_i >= out_buf.len() {
-                return Err(crate::Error::OutputBufferTooSmall);
+                return Err(Error::OutputBufferTooSmall);
             }
             out_i = code_i + 1;
         }
@@ -93,12 +102,12 @@ pub fn encode_array<'a>(out_buf: &'a mut [u8], in_buf: &[u8]) -> crate::Result<&
             out_buf[code_i] = (out_i - code_i) as u8;
             code_i = out_i;
             if code_i >= out_buf.len() {
-                return Err(crate::Error::OutputBufferTooSmall);
+                return Err(Error::OutputBufferTooSmall);
             }
             out_i = code_i + 1;
         } else {
             if out_i >= out_buf.len() {
-                return Err(crate::Error::OutputBufferTooSmall);
+                return Err(Error::OutputBufferTooSmall);
             }
             out_buf[out_i] = *x;
             out_i += 1;
@@ -117,13 +126,14 @@ pub fn encode_array<'a>(out_buf: &'a mut [u8], in_buf: &[u8]) -> crate::Result<&
 ///
 /// The output data is COBS-encoded, containing no zero-bytes.
 ///
-/// The return value is a [Result] that in the `Ok` case is a vector of `u8`.
+/// The return value is a [`Result`] that in the [`Ok`] case is a vector of `u8`.
 ///
 ///     let data = b"ABC\0ghij\0xyz";
 ///     let data_cobs = cobs2::cobs::encode_vector(data);
-///     assert_eq!(data_cobs.unwrap(), b"\x04ABC\x05ghij\x04xyz".to_vec());
+///     assert_eq!(data_cobs.unwrap(), b"\x04ABC\x05ghij\x04xyz");
+///
 #[cfg(feature = "alloc")]
-pub fn encode_vector(in_buf: &[u8]) -> crate::Result<alloc::vec::Vec<u8>> {
+pub fn encode_vector(in_buf: &[u8]) -> Result<alloc::vec::Vec<u8>> {
     let mut code_i = 0;
     let mut run_len = 0_u8;
     let mut out_vec = alloc::vec::Vec::<u8>::with_capacity(encode_max_output_size(in_buf.len()));
@@ -251,11 +261,13 @@ where
 ///
 /// The caller must provide a `u8` iterator.
 ///
-/// The return value is a `u8` iterator. This is suitable to `collect()` into a byte container.
+/// The return value is a `u8` iterator. This is suitable to [`Iterator::collect()`] into a byte
+/// container.
 ///
 ///     let data = b"ABC\0ghij\0xyz".to_vec();
 ///     let data_cobs: Vec<u8> = cobs2::cobs::encode_iter(data.into_iter()).collect();
-///     assert_eq!(data_cobs, b"\x04ABC\x05ghij\x04xyz".to_vec());
+///     assert_eq!(data_cobs, b"\x04ABC\x05ghij\x04xyz");
+///
 pub fn encode_iter(i: impl Iterator<Item = u8>) -> impl Iterator<Item = u8> {
     EncodeIterator::new(i)
 }
@@ -266,11 +278,13 @@ pub fn encode_iter(i: impl Iterator<Item = u8>) -> impl Iterator<Item = u8> {
 ///
 /// The caller must provide a `&u8` iterator.
 ///
-/// The return value is a `u8` iterator. This is suitable to `collect()` into a byte container.
+/// The return value is a `u8` iterator. This is suitable to [`Iterator::collect()`] into a byte
+/// container.
 ///
 ///     let data = b"ABC\0ghij\0xyz".to_vec();
 ///     let data_cobs: Vec<u8> = cobs2::cobs::encode_ref_iter(data.iter()).collect();
-///     assert_eq!(data_cobs, b"\x04ABC\x05ghij\x04xyz".to_vec());
+///     assert_eq!(data_cobs, b"\x04ABC\x05ghij\x04xyz");
+///
 pub fn encode_ref_iter<'a, I>(i: I) -> impl Iterator<Item = u8> + 'a
 where
     I: Iterator<Item = &'a u8> + 'a,
@@ -281,17 +295,26 @@ where
 /// Decode COBS-encoded data, writing decoded data to the given output buffer.
 ///
 /// The caller must provide a reference to a suitably-sized output buffer.
-/// [decode_max_output_size()] calculates the required output buffer size, for a given input
+/// [`decode_max_output_size()`] calculates the required output buffer size, for a given input
 /// size.
 ///
-/// The return value is a [Result] that in the `Ok` case is a slice of the decoded data in the
+/// The return value is a [`Result`] that in the [`Ok`] case is a slice of the decoded data in the
 /// output buffer.
+///
+/// The following errors could be returned:
+///
+/// * [`Error::OutputBufferTooSmall`]
+/// * [`Error::ZeroInEncodedData`]
+/// * [`Error::TruncatedEncodedData`]
+///
+/// Example:
 ///
 ///     let mut decode_buf = [0x55_u8; 1000];
 ///     let data_cobs = b"\x04ABC\x05ghij\x04xyz";
 ///     let decode_data = cobs2::cobs::decode_array(&mut decode_buf, data_cobs);
 ///     assert_eq!(decode_data.unwrap(), b"ABC\0ghij\0xyz");
-pub fn decode_array<'a>(out_buf: &'a mut [u8], in_buf: &[u8]) -> crate::Result<&'a [u8]> {
+///
+pub fn decode_array<'a>(out_buf: &'a mut [u8], in_buf: &[u8]) -> Result<&'a [u8]> {
     let mut code_i = 0;
     let mut out_i = 0;
 
@@ -299,18 +322,18 @@ pub fn decode_array<'a>(out_buf: &'a mut [u8], in_buf: &[u8]) -> crate::Result<&
         loop {
             let code = in_buf[code_i];
             if code == 0 {
-                return Err(crate::Error::ZeroInEncodedData);
+                return Err(Error::ZeroInEncodedData);
             }
             for in_i in (code_i + 1)..(code_i + code as usize) {
                 if in_i >= in_buf.len() {
-                    return Err(crate::Error::TruncatedEncodedData);
+                    return Err(Error::TruncatedEncodedData);
                 }
                 let in_byte = in_buf[in_i];
                 if in_byte == 0 {
-                    return Err(crate::Error::ZeroInEncodedData);
+                    return Err(Error::ZeroInEncodedData);
                 }
                 if out_i >= out_buf.len() {
-                    return Err(crate::Error::OutputBufferTooSmall);
+                    return Err(Error::OutputBufferTooSmall);
                 }
                 out_buf[out_i] = in_byte;
                 out_i += 1;
@@ -323,7 +346,7 @@ pub fn decode_array<'a>(out_buf: &'a mut [u8], in_buf: &[u8]) -> crate::Result<&
             if code < 0xFF {
                 // Output trailing zero.
                 if out_i >= out_buf.len() {
-                    return Err(crate::Error::OutputBufferTooSmall);
+                    return Err(Error::OutputBufferTooSmall);
                 }
                 out_buf[out_i] = 0;
                 out_i += 1;
@@ -335,13 +358,21 @@ pub fn decode_array<'a>(out_buf: &'a mut [u8], in_buf: &[u8]) -> crate::Result<&
 
 /// Decode COBS-encoded data, returning output as a vector of `u8`.
 ///
-/// The return value is a [Result] that in the `Ok` case is a vector of `u8`.
+/// The return value is a [`Result`] that in the [`Ok`] case is a vector of `u8`.
+///
+/// The following errors could be returned:
+///
+/// * [`Error::ZeroInEncodedData`]
+/// * [`Error::TruncatedEncodedData`]
+///
+/// Example:
 ///
 ///     let data_cobs = b"\x04ABC\x05ghij\x04xyz";
 ///     let decode_data = cobs2::cobs::decode_vector(data_cobs);
 ///     assert_eq!(decode_data.unwrap(), b"ABC\0ghij\0xyz");
+///
 #[cfg(feature = "alloc")]
-pub fn decode_vector(in_buf: &[u8]) -> crate::Result<alloc::vec::Vec<u8>> {
+pub fn decode_vector(in_buf: &[u8]) -> Result<alloc::vec::Vec<u8>> {
     let mut code_i = 0;
     let mut out_vec = alloc::vec::Vec::<u8>::with_capacity(decode_max_output_size(in_buf.len()));
 
@@ -349,15 +380,15 @@ pub fn decode_vector(in_buf: &[u8]) -> crate::Result<alloc::vec::Vec<u8>> {
         loop {
             let code = in_buf[code_i];
             if code == 0 {
-                return Err(crate::Error::ZeroInEncodedData);
+                return Err(Error::ZeroInEncodedData);
             }
             for in_i in (code_i + 1)..(code_i + code as usize) {
                 if in_i >= in_buf.len() {
-                    return Err(crate::Error::TruncatedEncodedData);
+                    return Err(Error::TruncatedEncodedData);
                 }
                 let in_byte = in_buf[in_i];
                 if in_byte == 0 {
-                    return Err(crate::Error::ZeroInEncodedData);
+                    return Err(Error::ZeroInEncodedData);
                 }
                 out_vec.push(in_byte);
             }
@@ -438,7 +469,8 @@ where
 ///
 /// The caller must provide a `u8` iterator.
 ///
-/// The return value is a `u8` iterator. This is suitable to `collect()` into a byte container.
+/// The return value is a `u8` iterator. This is suitable to [`Iterator::collect()`] into a byte
+/// container.
 ///
 /// Unlike the other decode functions, no errors are returned by this function. Rather, decoding is
 /// best-effort. In the event of any zero in the input, this will be regarded as end-of-data. If
@@ -448,6 +480,7 @@ where
 ///     let data_cobs = b"\x04ABC\x05ghij\x04xyz".to_vec();
 ///     let decode_data: Vec<u8> = cobs2::cobs::decode_iter(data_cobs.into_iter()).collect();
 ///     assert_eq!(decode_data, b"ABC\0ghij\0xyz");
+///
 pub fn decode_iter<I>(i: I) -> impl Iterator<Item = u8>
 where
     I: Iterator<Item = u8>,
@@ -461,7 +494,8 @@ where
 ///
 /// The caller must provide a `&u8` iterator.
 ///
-/// The return value is a `u8` iterator. This is suitable to `collect()` into a byte container.
+/// The return value is a `u8` iterator. This is suitable to [`Iterator::collect()`] into a byte
+/// container.
 ///
 /// Unlike the other decode functions, no errors are returned by this function. Rather, decoding is
 /// best-effort. In the event of any zero in the input, this will be regarded as end-of-data. If
@@ -471,6 +505,7 @@ where
 ///     let data_cobs = b"\x04ABC\x05ghij\x04xyz".to_vec();
 ///     let decode_data: Vec<u8> = cobs2::cobs::decode_ref_iter(data_cobs.iter()).collect();
 ///     assert_eq!(decode_data, b"ABC\0ghij\0xyz");
+///
 pub fn decode_ref_iter<'a, I>(i: I) -> impl Iterator<Item = u8> + 'a
 where
     I: Iterator<Item = &'a u8> + 'a,
@@ -506,7 +541,7 @@ impl<I> Iterator for DecodeResultIterator<I>
 where
     I: Iterator<Item = u8>,
 {
-    type Item = crate::Result<u8>;
+    type Item = Result<u8>;
 
     fn next(&mut self) -> Option<Self::Item> {
         loop {
@@ -517,7 +552,7 @@ where
             if in_iter_next.is_none() {
                 self.eof = true;
                 if self.count_run != 0 {
-                    return Some(Err(crate::Error::TruncatedEncodedData));
+                    return Some(Err(Error::TruncatedEncodedData));
                 } else {
                     return None;
                 }
@@ -525,7 +560,7 @@ where
             let byte_val = in_iter_next.unwrap();
             if byte_val == 0 {
                 self.eof = true;
-                return Some(Err(crate::Error::ZeroInEncodedData));
+                return Some(Err(Error::ZeroInEncodedData));
             }
             if self.count_run == 0 {
                 let last_run = self.last_run;
@@ -553,13 +588,21 @@ where
 ///
 /// The caller must provide a `u8` iterator.
 ///
-/// The return value is a `crate::Result<u8>` iterator. This is suitable to `collect()` into a
-/// byte container wrapped in `crate::Result<>`.
+/// The return value is a [`Result<u8>`] iterator. This is suitable to [`Iterator::collect()`] into a
+/// byte container wrapped in [`Result`].
+///
+/// The following errors could be returned:
+///
+/// * [`Error::ZeroInEncodedData`]
+/// * [`Error::TruncatedEncodedData`]
+///
+/// Example:
 ///
 ///     let data_cobs = b"\x04ABC\x05ghij\x04xyz".to_vec();
 ///     let decode_data: cobs2::Result<Vec<u8>> = cobs2::cobs::decode_result_iter(data_cobs.into_iter()).collect();
 ///     assert_eq!(decode_data.unwrap(), b"ABC\0ghij\0xyz");
-pub fn decode_result_iter<I>(i: I) -> impl Iterator<Item = crate::Result<u8>>
+///
+pub fn decode_result_iter<I>(i: I) -> impl Iterator<Item = Result<u8>>
 where
     I: Iterator<Item = u8>,
 {
@@ -572,13 +615,21 @@ where
 ///
 /// The caller must provide a `&u8` iterator.
 ///
-/// The return value is a `crate::Result<u8>` iterator. This is suitable to `collect()` into a
-/// byte container wrapped in `crate::Result<>`.
+/// The return value is a [`Result<u8>`] iterator. This is suitable to [`Iterator::collect()`] into a
+/// byte container wrapped in [`Result`].
+///
+/// The following errors could be returned:
+///
+/// * [`Error::ZeroInEncodedData`]
+/// * [`Error::TruncatedEncodedData`]
+///
+/// Example:
 ///
 ///     let data_cobs = b"\x04ABC\x05ghij\x04xyz".to_vec();
 ///     let decode_data: cobs2::Result<Vec<u8>> = cobs2::cobs::decode_result_ref_iter(data_cobs.iter()).collect();
 ///     assert_eq!(decode_data.unwrap(), b"ABC\0ghij\0xyz");
-pub fn decode_result_ref_iter<'a, I>(i: I) -> impl Iterator<Item = crate::Result<u8>> + 'a
+///
+pub fn decode_result_ref_iter<'a, I>(i: I) -> impl Iterator<Item = Result<u8>> + 'a
 where
     I: Iterator<Item = &'a u8> + 'a,
 {
